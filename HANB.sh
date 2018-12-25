@@ -6,12 +6,19 @@
 #   Arguments   : list of options, maximum of 256
 #                 "opt1" "opt2" ...
 #   Return value: selected index (0 for opt1, 1 for opt2 ...)
+. ./consortium/consortium.sh
+
+. ./channel/getchanneldetails.sh
+
+. ./orgDetails/getOrgDetails.sh
 function select_option {
   
   # little helpers for terminal print control and key input
   LBLUE='\033[1;34m'
   BLUE='\033[0;34m'
+  CYAN='\033[1;30m'
   NC='\033[0m'
+  GREEN='\033[0;32m'
   ESC=$(printf "\033")
   cursor_blink_on()  { printf "%s" "${ESC}[?25h"; }
   cursor_blink_off() { printf "%s" "${ESC}[?25l"; }
@@ -30,11 +37,12 @@ function select_option {
   # for opt; do printf "\n"; done
 
   # determine current screen position for overwriting the options
-  # local lastrow=`get_cursor_row`
+  # local lastrow=$(expr `get_cursor_row` + 1)
+  # echo $lastrow
   # local startrow=$(($lastrow - $#))
 
   # ensure cursor and input echoing back on upon a ctrl+c during read -s
-  #trap "cursor_blink_on; stty echo 2> /dev/null; clear; exit" 2
+  trap "cursor_blink_on; stty echo 2> /dev/null; clear; exit" 2
   cursor_blink_off
 
   local selected=1
@@ -48,6 +56,8 @@ function select_option {
     local idx=1
     for opt; do
       cursor_to $((idx + 1))
+      #cursor_to $lastrow
+      #INX=$(expr "$lastrow" + "$idx")
       if [ $idx -eq $selected ]; then
         print_selected "$opt"
       else
@@ -74,19 +84,95 @@ function select_option {
 
   return $((selected - 1))
 }
-function installingPre {
-  echo "installing Pre-requirements"
+
+arrOrgDetails() {
+    #echo $1
+    max=$1
+    for lf in `seq 0 $max`
+    do
+      #ORG[${lf}]=${orgDetails[${lf},0]}
+      #echo "$(tput bel )"
+      echo -e " ${BLUE}Organisation ${lf} : ${NC}"
+      echo -e "    $(tput setaf [6])Name : ${orgDetails[${lf},0]}"
+      echo -e "    Peers count : ${orgDetails[${lf},1]}"
+      echo -e "    Is using CouchDb : ${orgDetails[${lf},2]} ${NC}"
+        
+    done
+    #echo ${ORG[@]}
 }
-function installPre {
+arrCons() {
+  #echo "IN"
+  Cons=$( expr ${#CON[@]} - 1)
+  echo -e "${GREEN}CONSORTIUMS list${NC}"
+  for con in `seq 0 ${Cons}`
+  do
+    #ORG[${lf}]=${orgDetails[${lf},0]}
+    #echo "$(tput bel )"
+    echo -e " ${BLUE}CONSORTIUMS ${con} : ${NC}"
+    echo -e "    $(tput setaf [6])Name : ${CONSORTIUMS[${con},0]}"
+    echo -e "    ORGANISATIONS INVOLVED: "
+    for org in `seq 2 $(expr ${CONSORTIUMS[${con},1]} + 1)`
+    do
+      echo -e "      $(tput setaf [6]) ${CONSORTIUMS[${con},${org}]} ${NC}"
+    done
+  done
+}
+arrChnls() {
+  #echo "IN"
+  Cns=$( expr ${#CNS[@]} - 1)
+  echo -e "${GREEN}CHANNEL list${NC}"
+  for cn in `seq 0 ${Cns}`
+  do
+    #ORG[${lf}]=${orgDetails[${lf},0]}
+    #echo "$(tput bel )"
+    echo -e " ${BLUE}CHANNEL ${cn} : ${NC}"
+    echo -e "    $(tput setaf [6])Name : ${CHANNELS[${cn},0]}"
+    echo -e "    $(tput setaf [6])CONSORTIUM USED : ${CHANNELS[${cn},1]}"
+    echo -e "    ORGANISATIONS INVOLVED: "
+    echo $(expr ${CHANNELS[${cn},2]} + 1)
+    for orgs in `seq 3 $(expr ${CHANNELS[${cn},2]} + 2)`
+    do
+      echo -e "      $(tput setaf [6]) ${CHANNELS[${cn},${orgs}]} ${NC}"
+    done
+  done
+}
+function getChDetails() {
+  getChannelDetails "${#ORG[@]}" "${ORG[@]}" "${CON[@]}"
+  arrChnls
+}
+function getCons() {
+  #echo "Getting consortium"
+  getConsortium "${ORG[@]}"
+  arrCons
+  echo "${ORG[@]}"
+  getChDetails
+}
+function OrgDetails {
+  getOrgDetails
+  #echo ${orgDetail[@]}
+  COUNT=$( expr ${#orgDetails[@]} / 3)
+  # echo "length = $(expr $COUNT)"
+  echo "${ORG[@]}"
+  arrOrgDetails $(expr $COUNT - 1)
+  sleep 5
+  getCons
+}
+function installPreRequirements {
+  echo  -e "${GREEN}installing Pre-requirements${NC}"
+  #sleep 10
+  OrgDetails
+}
+function needToInstallPreRequirements {
   insP=$(select_opt "Do you want to install all Prerequirements ?" "YES" "NO" )
   case "$insP" in 
-    0) installingPre ;;
-    1) echo "Assuming Prerequirements  are installed";;
+    0) installPreRequirements ;;
+    1) echo "Assuming Prerequirements  are installed";OrgDetails;;
   esac
 }
 function networkSelected {
   echo "$1"
-  installPre
+  #sleep 10
+  needToInstallPreRequirements
 }
 
 function orderertype {
