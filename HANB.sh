@@ -10,6 +10,7 @@
 
 . ./channel/getchanneldetails.sh
 
+. ./orderer/getordererdetails.sh
 . ./orgDetails/getOrgDetails.sh
 function select_option {
   
@@ -87,14 +88,17 @@ function select_option {
 
 arrOrgDetails() {
     #echo $1
-    max=$1
+    OCNT=$( expr ${#orgDetails[@]} / 3)
+    max=$(expr $OCNT - 1)
+    echo -e "${GREEN}"
+    echo -e "Organisations list${NC}"
     for lf in `seq 0 $max`
     do
       #ORG[${lf}]=${orgDetails[${lf},0]}
       #echo "$(tput bel )"
-      echo -e " ${BLUE}Organisation ${lf} : ${NC}"
-      echo -e "    $(tput setaf [6])Name : ${orgDetails[${lf},0]}"
-      echo -e "    Peers count : ${orgDetails[${lf},1]}"
+      echo -e " ${LBLUE}Organisation ${lf} : ${NC}"
+      echo -e "    ${BLUE}Name             : ${orgDetails[${lf},0]}"
+      echo -e "    Peers count      : ${orgDetails[${lf},1]}"
       echo -e "    Is using CouchDb : ${orgDetails[${lf},2]} ${NC}"
         
     done
@@ -103,48 +107,92 @@ arrOrgDetails() {
 arrCons() {
   #echo "IN"
   Cons=$( expr ${#CON[@]} - 1)
-  echo -e "${GREEN}CONSORTIUMS list${NC}"
+  echo -e "${GREEN}"
+  echo -e "CONSORTIUMS list${NC}"
   for con in `seq 0 ${Cons}`
   do
     #ORG[${lf}]=${orgDetails[${lf},0]}
     #echo "$(tput bel )"
-    echo -e " ${BLUE}CONSORTIUMS ${con} : ${NC}"
-    echo -e "    $(tput setaf [6])Name : ${CONSORTIUMS[${con},0]}"
-    echo -e "    ORGANISATIONS INVOLVED: "
+    echo -e " ${LBLUE}CONSORTIUMS ${con} : ${NC}"
+    echo -e "    ${BLUE}Name                   : ${CONSORTIUMS[${con},0]}"
+    echo -e "    ORGANISATIONS INVOLVED : "
     for org in `seq 2 $(expr ${CONSORTIUMS[${con},1]} + 1)`
     do
-      echo -e "      $(tput setaf [6]) ${CONSORTIUMS[${con},${org}]} ${NC}"
+    echo -e "    ${BLUE}                ${CONSORTIUMS[${con},${org}]} ${NC}"
     done
   done
 }
 arrChnls() {
   #echo "IN"
   Cns=$( expr ${#CNS[@]} - 1)
-  echo -e "${GREEN}CHANNEL list${NC}"
+  echo -e "${GREEN}"
+  echo -e "CHANNEL list${NC}"
   for cn in `seq 0 ${Cns}`
   do
     #ORG[${lf}]=${orgDetails[${lf},0]}
     #echo "$(tput bel )"
-    echo -e " ${BLUE}CHANNEL ${cn} : ${NC}"
-    echo -e "    $(tput setaf [6])Name : ${CHANNELS[${cn},0]}"
-    echo -e "    $(tput setaf [6])CONSORTIUM USED : ${CHANNELS[${cn},1]}"
-    echo -e "    ORGANISATIONS INVOLVED: "
-    echo $(expr ${CHANNELS[${cn},2]} + 1)
+    echo -e " ${LBLUE}CHANNEL ${cn} : ${NC}"
+    echo -e "    ${BLUE}Name                     : ${CHANNELS[${cn},0]}"
+    echo -e "    ${BLUE}CONSORTIUM USED          : ${CHANNELS[${cn},1]}"
+    echo -e "    ORGANISATIONS INVOLVED   : "
+    #echo $(expr ${CHANNELS[${cn},2]} + 1)
     for orgs in `seq 3 $(expr ${CHANNELS[${cn},2]} + 2)`
     do
-      echo -e "      $(tput setaf [6]) ${CHANNELS[${cn},${orgs}]} ${NC}"
+    echo -e "      ${BLUE}                ${CHANNELS[${cn},${orgs}]} ${NC}"
     done
   done
+}
+printOrderer() {
+  echo -e "${GREEN}ORDERER DETAILS: "
+  echo ""
+  echo -e "${BLUE}      Type                     : $ORDERER_TYPE"
+  echo -e "${BLUE}      Consortium in  Orderers  : $ORDERER_CONSORTIUM${NC}"
+  echo -e "${BLUE}      Number Of Orderers       : $NO_OF_ORDERERS${NC}"
+  if [ "$ORDERER_TYPE" == "KAFKA" ]; then
+  echo -e "${BLUE}      Number Of KAFKAS         : $NO_OF_KAFKAS${NC}"
+  echo -e "${BLUE}      Number Of Zookeepers     : $NO_OF_ZOOKEEPERS${NC}"
+  fi
+}
+yourConfig() {
+  echo -e "${BROWN}Your Network configuration ↓${NC}"
+  arrOrgDetails
+  arrCons
+  arrChnls
+  printOrderer
+}
+getOrdererDetails() {
+  ORDERER_TYPE="$1"
+  if [ "$ORDERER_TYPE" == "SOLO" ]; then
+    NO_OF_ORDERERS=1
+    readOrdererConsortium "${CON[@]}"
+    #printOrderer
+  else
+    readOrdererConsortium "${CON[@]}"
+    readNoOfOrderers
+    readKafkaDetails
+    readZookeeperDetails
+    #printOrderer
+  fi
+  yourConfig
+}
+readOrdererType() {
+  Orderer_type=$(select_opt "Select the Orderer type to work on : " "SOLO" "KAFKA")
+  case "$Orderer_type" in
+    0) getOrdererDetails "SOLO";;
+    1) getOrdererDetails "KAFKA";;
+  esac
 }
 function getChDetails() {
   getChannelDetails "${#ORG[@]}" "${ORG[@]}" "${CON[@]}"
   arrChnls
+  clear
+  readOrdererType
 }
 function getCons() {
   #echo "Getting consortium"
   getConsortium "${ORG[@]}"
   arrCons
-  echo "${ORG[@]}"
+  #echo "${ORG[@]}"
   getChDetails
 }
 function OrgDetails {
@@ -152,7 +200,7 @@ function OrgDetails {
   #echo ${orgDetail[@]}
   COUNT=$( expr ${#orgDetails[@]} / 3)
   # echo "length = $(expr $COUNT)"
-  echo "${ORG[@]}"
+  #echo "${ORG[@]}"
   arrOrgDetails $(expr $COUNT - 1)
   sleep 5
   getCons
@@ -170,7 +218,7 @@ function needToInstallPreRequirements {
   esac
 }
 function networkSelected {
-  echo "$1"
+  echo  -e "${GREEN} YOu selected Fabric $1 version${NC}"
   #sleep 10
   needToInstallPreRequirements
 }
