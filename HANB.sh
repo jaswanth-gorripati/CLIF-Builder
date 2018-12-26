@@ -10,17 +10,37 @@
 
 . ./channel/getchanneldetails.sh
 
+. ./orgTempFiles/crypto-config-temp.sh
 . ./orderer/getordererdetails.sh
 . ./orgDetails/getOrgDetails.sh
+LBLUE='\033[1;34m'
+BLUE='\033[0;34m'
+CYAN='\033[1;30m'
+NC='\033[0m'
+GREEN='\033[0;32m'
+ESC=$(printf "\033")
+
+
+function askProceed () {
+  echo -e "${BROWN}"
+  read -p "Continue To generate certifiavtes and network (y/n) ? " ans
+  case "$ans" in
+    y|Y )
+      echo "proceeding ..."
+    ;;
+    n|N )
+      echo "exiting..."
+      exit 1
+    ;;
+    * )
+      echo "invalid response"
+      askProceed
+    ;;
+  esac
+}
 function select_option {
   
   # little helpers for terminal print control and key input
-  LBLUE='\033[1;34m'
-  BLUE='\033[0;34m'
-  CYAN='\033[1;30m'
-  NC='\033[0m'
-  GREEN='\033[0;32m'
-  ESC=$(printf "\033")
   cursor_blink_on()  { printf "%s" "${ESC}[?25h"; }
   cursor_blink_off() { printf "%s" "${ESC}[?25l"; }
   cursor_to()        { printf "%s" "${ESC}[$1;${2:-1}H"; }
@@ -85,6 +105,22 @@ function select_option {
 
   return $((selected - 1))
 }
+
+function gCryptoConfig() {
+  OC=$( expr ${#orgDetails[@]} / 3)
+  MX=$(expr $OC - 1)
+  for inx in `seq 0 $MX`
+  do
+    if [ "${inx}" == "0" ]; then
+      case $ORDERER_TYPE in
+      "SOLO") gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "true" $ORDERER_TYPE
+      "KAFKA") gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "true" $ORDERER_TYPE $NO_OF_ORDERERS
+    else
+      gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "false"
+    fi
+    
+}
+
 
 arrOrgDetails() {
     #echo $1
@@ -159,6 +195,7 @@ yourConfig() {
   arrCons
   arrChnls
   printOrderer
+
 }
 getOrdererDetails() {
   ORDERER_TYPE="$1"
