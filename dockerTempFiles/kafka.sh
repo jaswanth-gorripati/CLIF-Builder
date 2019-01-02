@@ -1,14 +1,13 @@
 #!/bin/bash
-
+DTSPATH="./services.yaml"
 function addKafka() {
     KF_ID=$1
     AddNumber=$2
     port1=$(expr 5984 + $2)
     EXTERNAL_NETWORK=$3
-    PATHZ=$4
-    zoo_str=$5
-    Zoo_count=$6
-    cat << EOF >> ${PATHZ}
+    zoo_str=$4
+    Zoo_count=$5
+    cat << EOF >> ${DTSPATH}
   kafka${KF_ID}:
     image: hyperledger/fabric-kafka:x86_64-0.4.6
     hostname: kafka${KF_ID}
@@ -28,13 +27,13 @@ function addKafka() {
 EOF
     for zoo in `seq 0 ${Zoo_count}`
     do
-        cat << EOF >> ${PATH}
+        cat << EOF >> ${DTSPATH}
       - zookeeper${zoo}
 EOF
     done
-    cat << EOF >> ${PATH}
+    cat << EOF >> ${DTSPATH}
     networks:
-      EXTERNAL_NETWORK:
+      ${EXTERNAL_NETWORK}:
         aliases:
           - kafka${KF_ID}
 EOF

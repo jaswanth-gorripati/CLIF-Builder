@@ -1,9 +1,10 @@
 #!/bin/bash
+
+DTSPATH="./services.yaml"
 function addCli() {
     PORG_NAME=$1
     EXTERNAL_NETWORK=$2
-    PATHC=$3
-cat << EOF > ${PATHC}
+cat << EOF >> ${DTSPATH}
   ${PORG_NAME}_cli:
     hostname: ${PORG_NAME}_cli
     image: hyperledger/fabric-tools:x86_64-1.1.0
@@ -39,8 +40,8 @@ cat << EOF > ${PATHC}
         - ./:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
         - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
     networks:
-      EXTERNAL_NETWORK:
+      ${EXTERNAL_NETWORK}:
         aliases:
-          - cli 
+          - ${PORG_NAME}.cli 
 EOF
 }

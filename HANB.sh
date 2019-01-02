@@ -14,6 +14,16 @@
 . ./orgTempFiles/configtx-temp.sh
 . ./orderer/getordererdetails.sh
 . ./orgDetails/getOrgDetails.sh
+. ./dockerTempFiles/docker-compose-temp.sh
+. ./dockerTempFiles/volumes.sh
+. ./dockerTempFiles/ca.sh
+. ./dockerTempFiles/cli.sh
+. ./dockerTempFiles/couchdb.sh
+. ./dockerTempFiles/kafka.sh
+. ./dockerTempFiles/orderer.sh
+. ./dockerTempFiles/peer.sh
+. ./dockerTempFiles/zookeeper.sh
+
 LBLUE='\033[1;34m'
 BLUE='\033[0;34m'
 CYAN='\033[1;30m'
@@ -216,6 +226,16 @@ printOrderer() {
   echo -e "${BLUE}      Number Of Zookeepers     : $NO_OF_ZOOKEEPERS${NC}"
   fi
 }
+
+function generateDockerFiles() {
+  addDockerFile $SELECTED_NETWORK_TYPE "" 0 ${orgDetails[0,0]} ${orgDetails[0,1]} ${orgDetails[0,2]} true $ORDERER_TYPE $NO_OF_ORDERERS $ORDERER_PROFILENAME $NO_OF_KAFKAS $NO_OF_ZOOKEEPERS
+  for D_ORG in `seq 1 $max`
+  do
+    #DPath="${PWD}/${DORG_NAME}/docker-compose.yaml"
+    addDockerFile $SELECTED_NETWORK_TYPE "" $EXT_NTW_NAME $(expr $D_ORG * 1000) ${orgDetails[${D_ORG},0]} ${orgDetails[${lf},1]} ${orgDetails[${lf},2]} false
+  done
+  echo -e "${BROWN} Docker Files are generated ....${NC}"
+}
 function readNetworkDeploymentType() {
   NETWORK_DEPLOY_TYPE=$(select_opt "Select the network deployment type : " "Docker-compose ( single machine )" "Docker-swarm ( single machine )" "Docker-swarm( multiple machines )")
   case "$NETWORK_DEPLOY_TYPE" in
@@ -224,10 +244,51 @@ function readNetworkDeploymentType() {
     2) networkSelection "Docker-swarm-m";;
   esac
 }
-function networkSelection() {
-  echo -e "${LBLUE}Network selected $1 ${NC}"
-  echo -e "${BROWN}Generating Required network files${NC}"
+function readNetworkName() {
+  echo -e "${BLUE}"
+    read -p "   Enter External Network name : " EXT_NTW_NAME    
+    echo -e "${NC}"
+  if [ -z "$EXT_NTW_NAME" ]; then
+      echo -e "${RED}!!! Please enter a valid Name${NC}"
+      readNetworkName
+      return;
+  fi
+  reg='^[a-zA-Z]+$'
+  if [[ ! $EXT_NTW_NAME =~ $reg ]]; then
+      echo -e " ${RED}!!! Network name must contain only Alphabets${NC}"
+      readNetworkName
+      return;
+  fi
 }
+function readStackName() {
+  echo -e "${BLUE}"
+    read -p "   Enter Stack  name you need to deploy : " STACK_NAME    
+    echo -e "${NC}"
+  if [ -z "$STACK_NAME" ]; then
+      echo -e "${RED}!!! Please enter a valid Name${NC}"
+      readStackName
+      return;
+  fi
+  reg='^[a-zA-Z]+$'
+  if [[ ! $STACK_NAME =~ $reg ]]; then
+      echo -e " ${RED}!!! Stack name must contain only Alphabets${NC}"
+      readStackName
+      return;
+  fi
+}
+function networkSelection() {
+  SELECTED_NETWORK_TYPE=$1
+  echo -e "${LBLUE}Network selected $1 ${NC}"
+  if [ "$1" == "Docker-compose" ]; then
+    echo -e "${BROWN}Generating Required network files${NC}"
+  else
+    readNetworkName
+    readStackName
+    echo -e "${BROWN}Generating Required network files${NC}"
+  fi
+  generateDockerFiles
+}
+
 yourConfig() {
   echo -e "${BROWN}Your Network configuration ↓${NC}"
   arrOrgDetails
@@ -305,30 +366,11 @@ function networkSelected {
   needToInstallPreRequirements
 }
 
-function orderertype {
- select_option "$@" 1>&2
-  local result=$?
-  #echo $result  
-}
-
-function dbselection {
-  select_option "$@" 1>&2
-  local result=$?
-  echo $result
-}
-
 function select_opt {
   select_option "$@" 1>&2
   local result=$?
   echo $result
 }
-
-function versions {
-  select_option "$@" 1>&2
-  local result=$?
-  echo $result
-}
-
 userChoice=$(select_opt "Select the Hyperledger-fabric version to work on :" "v1.1" "v1.2" "v1.3" "v1.4" )
 # clear
 case "$userChoice" in
@@ -336,25 +378,4 @@ case "$userChoice" in
   1) networkSelected "v1.2";;
   2) networkSelected "v1.3";;
   3) networkSelected "v1.4";;
-esac
-
-
-case "$ordererlist" in 
-  0) echo "selected kafka";;
-  1) echo "selected solo";; 
-esac
-
-
-case "$dblist" in 
-  0) echo "selected couchdb";;
-  1) echo "selected leveldb";; 
-esac
-
-
-
-case "$versionlist" in 
-  0) echo "selected 1.1";;
-  1) echo "selected 1.2";;
-  2) echo "selected 1.3";;
-  3) echo "selected 1.4";; 
 esac

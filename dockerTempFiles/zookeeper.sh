@@ -1,11 +1,11 @@
 #!/bin/bash
 
+DTSPATH="./services.yaml"
 function addZookeeper() {
     ZOO_ID=$1
     EXTERNAL_NETWORK=$2
-    PATHZ=$3
-    zoo_str=$4
-    cat << EOF >> ${PATHZ}
+    zoo_str=$3
+    cat << EOF >> ${DTSPATH}
   zookeeper${ZOO_ID}:
     image: hyperledger/fabric-zookeeper:x86_64-0.4.6
     hostname: zookeeper${ZOO_ID}
@@ -17,7 +17,7 @@ function addZookeeper() {
       - 2888
       - 3888
     networks:
-      EXTERNAL_NETWORK:
+      ${EXTERNAL_NETWORK}:
         aliases:
           - zookeeper${ZOO_ID}
 EOF

@@ -1,4 +1,5 @@
 #!/bin/bash
+DTSPATH="./services.yaml"
 function addPeer() {
     PORG_NAME=$1
     P_ID=$2
@@ -6,9 +7,8 @@ function addPeer() {
     port1=$(expr 7051 + $3)
     port2=$(expr 7053 + $3)
     EXTERNAL_NETWORK=$4
-    PATHP=$5
-    couchdb=$6
-cat << EOF >> ${PATHP}
+    couchdb=$5
+cat << EOF >> ${DTSPATH}
   peer${P_ID}_${PORG_NAME}:
     hostname: peer${P_ID}.${PORG_NAME}.example.com
     image: hyperledger/fabric-peer:x86_64-1.1.0
@@ -21,7 +21,7 @@ cat << EOF >> ${PATHP}
       # the following setting starts chaincode containers on the same
       # bridge network as the peers
       # https://docs.docker.com/compose/networking/
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=EXTERNAL_NETWORK
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${EXTERNAL_NETWORK}
       #- CORE_LOGGING_LEVEL=INFO
       - CORE_LOGGING_LEVEL=DEBUG
       - CORE_CHAINCODE_STARTUPTIMEOUT=1200s
@@ -39,12 +39,12 @@ cat << EOF >> ${PATHP}
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer${P_ID}.${PORG_NAME}.example.com:7051
       - CORE_PEER_LOCALMSPID=${PORG_NAME}MSP
 EOF
-if [ ${couchdb} -ne "" ]; then 
-cat << EOF >> ${PATH}
+if [ ${couchdb} == true ]; then 
+cat << EOF >> ${DTSPATH}
       - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
-      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=${couchdb}:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb${P_ID}.${PORG_NAME}:5984
 EOF
-cat << EOF >> ${PATH}
+cat << EOF >> ${DTSPATH}
     volumes:
       - /var/run/:/host/var/run/
       - ./crypto-config/peerOrganizations/${PORG_NAME}.example.com/peers/peer${P_ID}.${PORG_NAME}.example.com/msp:/etc/hyperledger/fabric/msp
@@ -57,14 +57,14 @@ cat << EOF >> ${PATH}
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: peer node start
 EOF
-if [ ${couchdb} -ne "" ]; then 
-cat << EOF >> ${PATH}
+if [ ${couchdb} == true ]; then 
+cat << EOF >> ${DTSPATH}
     depends_on:
-      - couchdb2
+      - couchdb${P_ID}.${PORG_NAME}
 EOF
-cat << EOF >> ${PATH}
+cat << EOF >> ${DTSPATH}
     networks:
-      EXTERNAL_NETWORK:
+      ${EXTERNAL_NETWORK}:
         aliases:
           - peer${P_ID}.${PORG_NAME}.example.com
 

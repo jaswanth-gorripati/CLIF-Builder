@@ -1,15 +1,14 @@
 #!/bin/bash
-
+DTSPATH="./services.yaml"
 function addOrderer() {
     ORDR_ID=$1
     AddNumber=$2
     port1=$(expr 7050 + $2)
     EXTERNAL_NETWORK=$3
-    PATHO=$4
+    OR_P_NAME=$4
     KF_STR=$5
-    OR_P_NAME=$6
-    KFS_Count=$7
-    cat << EOF >> ${PATHO}
+    KFS_Count=$6
+    cat << EOF >> ${DTSPATH}
   orderer${ORDR_ID}:
     hostname: orderer${ORDR_ID}.example.com
     image: hyperledger/fabric-orderer:x86_64-1.1.0
@@ -18,10 +17,10 @@ function addOrderer() {
       restart_policy:
         condition: on-failure
     environment:
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=EXTERNAL_NETWORK
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${EXTERNAL_NETWORK}
       - ORDERER_HOST=orderer${ORDR_ID}.example.com
 EOF
-if [ ${KF_STR} -ne "" ]; then
+if [ ${KF_STR} != "" ]; then
 cat << EOF >> ${PATH}
       - CONFIGTX_ORDERER_ORDERERTYPE=kafka
       - CONFIGTX_ORDERER_KAFKA_BROKERS=[${KF_STR}]
@@ -72,7 +71,7 @@ cat << EOF >> ${PATH}
       - ${port1}:7050
 EOF
 
-if [ ${KFS_Count} != "0" ];then
+if [ ${KFS_Count} == "" ];then
 cat << EOF >> ${PATH}
     depends_on:
 EOF
@@ -85,7 +84,7 @@ done
 fi
 cat << EOF >> ${PATH}
     networks:
-      EXTERNAL_NETWORK:
+      ${EXTERNAL_NETWORK}:
         aliases:
           - orderer${ORDR_ID}.example.com
 EOF

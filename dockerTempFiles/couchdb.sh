@@ -1,13 +1,14 @@
 #!/bin/bash
 
+DTSPATH="./services.yaml"
 function addCouch() {
     COUCH_ID=$1
     AddNumber=$2
     port1=$(expr 5984 + $2)
     EXTERNAL_NETWORK=$3
-    PATHC=$4
-    cat << EOF >> ${PATHC}
-  couchdb${COUCH_ID}:
+    CORG=$4
+    cat << EOF >> ${DTSPATH}
+  couchdb${COUCH_ID}_${CORG}:
     image: hyperledger/fabric-couchdb:x86_64-0.4.6
     deploy:
       replicas: 1
@@ -15,10 +16,10 @@ function addCouch() {
         condition: on-failure
     ports:
       - ${port1}:5984
-    hostname: couchdb${COUCH_ID}
+    hostname: couchdb${COUCH_ID}.${CORG}
     networks:
-      EXTERNAL_NETWORK:
+      ${EXTERNAL_NETWORK}:
         aliases:
-          - couchdb${COUCH_ID}
+          - couchdb${COUCH_ID}.${CORG}
 EOF
 }

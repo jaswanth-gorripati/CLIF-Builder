@@ -1,14 +1,12 @@
 #!/bin/bash
-
+DTSPATH="./services.yaml"
 function addCa() {
     PORG_NAME=$1
-    CA_ID=$2
-    AddNumber=$3
-    port1=$(expr 7054 + $3)
-    EXTERNAL_NETWORK=$4
-    PATHC=$5
-cat << EOF > ${PATHC}
-  ca${CA_ID}:
+    AddNumber=$2
+    port1=$(expr 7054 + $2)
+    EXTERNAL_NETWORK=$3
+cat << EOF > ${DTSPATH}
+  ca_${PORG_NAME}:
     image: hyperledger/fabric-ca:x86_64-1.1.0
     deploy:
       replicas: 1
@@ -28,9 +26,9 @@ cat << EOF > ${PATHC}
       #- ./ledger/ca-${PORG_NAME}:/etc/hyperledger/fabric-ca-server
     hostname: ca-${PORG_NAME}
     networks:
-      EXTERNAL_NETWORK:
+      ${EXTERNAL_NETWORK}:
         aliases:
           - ca-${PORG_NAME}
 EOF
 }
-addCa "org1" "1" "0" "byfn" "./ca.yaml"
+#addCa "org1" "1" "0" "byfn" "./ca.yaml"
