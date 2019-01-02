@@ -9,6 +9,7 @@ NO_OF_ORDERERS=0
 NO_OF_KAFKAS=0
 NO_OF_ZOOKEEPERS=0
 ORDERER_CONSORTIUM=""
+ORDERER_PROFILENAME=""
 
 Verify() {
     val=$1
@@ -43,6 +44,23 @@ readZookeeperDetails() {
     read -p "   Enter Number of Zookeepers to be used : " NO_OF_ZOOKEEPERS  
     echo -e "${NC}"
     Verify $NO_OF_ZOOKEEPERS readZookeeperDetails
+}
+
+readOrdererProfileName() {
+    echo -e "${LBLUE}"
+    read -p "   Enter Orderer Profile name to be used in network : " ORDERER_PROFILENAME    
+    echo -e "${NC}"
+    if [ -z "$ORDERER_PROFILENAME" ]; then
+        echo -e "${RED}!!! Please enter a valid Name${NC}"
+        readOrdererProfileName
+        return;
+    fi
+    reg='^[a-zA-Z]+$'
+    if [[ ! $ORDERER_PROFILENAME =~ $reg ]]; then
+        echo -e " ${RED}!!! Orderer profile name should contain only Alphabets ${NC}"
+        readOrdererProfileName
+        return;
+    fi
 }
 
 readOrdererConsortium() {

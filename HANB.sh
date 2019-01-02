@@ -24,7 +24,7 @@ ESC=$(printf "\033")
 
 function askProceed () {
   echo -e "${BROWN}"
-  read -p "Continue To generate certificates and network (y/n) ? " ans
+  read -p "$1" ans
   case "$ans" in
     y|Y )
       echo "proceeding ..."
@@ -120,7 +120,7 @@ function gConfigFile() {
   # ctxaddAllOrgs "org3"
   # ctxaddAllOrgs "org4"
   ctxOrderer ${orderer_tpe} ${NO_OF_ORDERERS} ${NO_OF_KAFKAS}
-  ctxGenesisProfile ${ORG_NAME} ${orderer_tpe} ${NO_OF_ORDERERS}
+  ctxGenesisProfile ${ORG_NAME} ${orderer_tpe} ${NO_OF_ORDERERS} ${ORDERER_PROFILENAME}
   # arr=( "Cons1" "2" "org1" "org2" )
   # ctxAddConsor ${arr[@]}
   ctxChannelProfile ${CHANNELS[0,0]} ${ORG_NAME}
@@ -132,6 +132,7 @@ function gConfigFile() {
 function gCryptoConfig() {
   OC=$( expr ${#orgDetails[@]} / 3)
   MX=$(expr $OC - 1)
+  gCleanFolder
   for inx in `seq 0 $MX`
   do
     if [ "${inx}" == "0" ]; then
@@ -206,6 +207,7 @@ arrChnls() {
 printOrderer() {
   echo -e "${GREEN}ORDERER DETAILS: "
   echo ""
+  echo -e "${BLUE}      Profile Name             : $ORDERER_PROFILENAME"
   echo -e "${BLUE}      Type                     : $ORDERER_TYPE"
   echo -e "${BLUE}      Consortium in  Orderers  : $ORDERER_CONSORTIUM${NC}"
   echo -e "${BLUE}      Number Of Orderers       : $NO_OF_ORDERERS${NC}"
@@ -214,24 +216,39 @@ printOrderer() {
   echo -e "${BLUE}      Number Of Zookeepers     : $NO_OF_ZOOKEEPERS${NC}"
   fi
 }
+function readNetworkDeploymentType() {
+  NETWORK_DEPLOY_TYPE=$(select_opt "Select the network deployment type : " "Docker-compose ( single machine )" "Docker-swarm ( single machine )" "Docker-swarm( multiple machines )")
+  case "$NETWORK_DEPLOY_TYPE" in
+    0) networkSelection "Docker-compose";;
+    1) networkSelection "Docker-swarm-s";;
+    2) networkSelection "Docker-swarm-m";;
+  esac
+}
+function networkSelection() {
+  echo -e "${LBLUE}Network selected $1 ${NC}"
+  echo -e "${BROWN}Generating Required network files${NC}"
+}
 yourConfig() {
   echo -e "${BROWN}Your Network configuration ↓${NC}"
   arrOrgDetails
   arrCons
   arrChnls
   printOrderer
-  askProceed
+  askProceed "Continue To generate certificates and network (y/n) ? "
   gCryptoConfig
   gConfigFile
-
+  askProceed "Continue To generate Docker network files (y/n) ? "
+  readNetworkDeploymentType
 }
 getOrdererDetails() {
   ORDERER_TYPE="$1"
   if [ "$ORDERER_TYPE" == "SOLO" ]; then
     NO_OF_ORDERERS=1
+    readOrdererProfileName
     readOrdererConsortium "${CON[@]}"
     #printOrderer
   else
+    readOrdererProfileName
     readOrdererConsortium "${CON[@]}"
     readNoOfOrderers
     readKafkaDetails

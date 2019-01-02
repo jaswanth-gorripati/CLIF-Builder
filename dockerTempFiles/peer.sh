@@ -1,0 +1,72 @@
+#!/bin/bash
+function addPeer() {
+    PORG_NAME=$1
+    P_ID=$2
+    AddNumber=$3
+    port1=$(expr 7051 + $3)
+    port2=$(expr 7053 + $3)
+    EXTERNAL_NETWORK=$4
+    PATHP=$5
+    couchdb=$6
+cat << EOF >> ${PATHP}
+  peer${P_ID}_${PORG_NAME}:
+    hostname: peer${P_ID}.${PORG_NAME}.example.com
+    image: hyperledger/fabric-peer:x86_64-1.1.0
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      # the following setting starts chaincode containers on the same
+      # bridge network as the peers
+      # https://docs.docker.com/compose/networking/
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=EXTERNAL_NETWORK
+      #- CORE_LOGGING_LEVEL=INFO
+      - CORE_LOGGING_LEVEL=DEBUG
+      - CORE_CHAINCODE_STARTUPTIMEOUT=1200s
+      - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer${P_ID}.${PORG_NAME}.example.com
+      - CORE_PEER_ADDRESS=peer${P_ID}.${PORG_NAME}.example.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer${P_ID}.${PORG_NAME}.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer${P_ID}.${PORG_NAME}.example.com:7051
+      - CORE_PEER_LOCALMSPID=${PORG_NAME}MSP
+EOF
+if [ ${couchdb} -ne "" ]; then 
+cat << EOF >> ${PATH}
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=${couchdb}:5984
+EOF
+cat << EOF >> ${PATH}
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/${PORG_NAME}.example.com/peers/peer${P_ID}.${PORG_NAME}.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./crypto-config/peerOrganizations/${PORG_NAME}.example.com/peers/peer${P_ID}.${PORG_NAME}.example.com/tls:/etc/hyperledger/fabric/tls
+      - peer${P_ID}.${PORG_NAME}.example.com:/var/hyperledger/production
+      #- ./ledger/peer${P_ID}.${${PORG_NAME}}.exapmle.com:/var/hyperledger/production
+    ports:
+      - "${port1}:7051"
+      - "${port2}:7053"
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+EOF
+if [ ${couchdb} -ne "" ]; then 
+cat << EOF >> ${PATH}
+    depends_on:
+      - couchdb2
+EOF
+cat << EOF >> ${PATH}
+    networks:
+      EXTERNAL_NETWORK:
+        aliases:
+          - peer${P_ID}.${PORG_NAME}.example.com
+
+EOF
+}

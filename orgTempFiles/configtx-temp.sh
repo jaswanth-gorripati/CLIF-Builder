@@ -152,6 +152,7 @@ function ctxGenesisProfile() {
 ORG_NAME=$1
 CTXORDRTYP=$2
 CTX_NO_ORDR=$(expr $3 - 1)
+GENESIS_NAME=$4
     cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
 ################################################################################
 #
@@ -163,7 +164,7 @@ CTX_NO_ORDR=$(expr $3 - 1)
 ################################################################################
 Profiles:
 
-    ImmutableEhrOrdererGenesis:
+    ${GENESIS_NAME}:
         Capabilities:
             <<: *ChannelCapabilities
         Orderer:

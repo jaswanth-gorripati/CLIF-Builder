@@ -4,6 +4,9 @@ NC='\033[0m'
 GREEN='\033[0;32m'
 PWD=~/HANB
 
+function gCleanFolder() {
+    rm -rf $PWD/*
+}
 function gFolder() {
     mkdir -p $PWD/${ORG_NAME}/
 
