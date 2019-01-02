@@ -34,14 +34,15 @@ cat << EOF >> ${DTSPATH}
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: /bin/bash
     volumes:
-        - /var/run/:/host/var/run/
-        - ./chaincode/:/opt/gopath/src/github.com/chaincode
-        - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
-        - ./:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
-        - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - /var/run/:/host/var/run/
+      - ./chaincode/:/opt/gopath/src/github.com/chaincode
+      - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ./:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+      - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
     networks:
       ${EXTERNAL_NETWORK}:
         aliases:
           - ${PORG_NAME}.cli 
 EOF
 }
+#addCli org1 ext

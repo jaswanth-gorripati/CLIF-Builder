@@ -5,7 +5,7 @@ function addCa() {
     AddNumber=$2
     port1=$(expr 7054 + $2)
     EXTERNAL_NETWORK=$3
-cat << EOF > ${DTSPATH}
+cat << EOF >> ${DTSPATH}
   ca_${PORG_NAME}:
     image: hyperledger/fabric-ca:x86_64-1.1.0
     deploy:

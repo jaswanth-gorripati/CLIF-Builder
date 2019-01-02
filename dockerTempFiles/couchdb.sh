@@ -23,3 +23,4 @@ function addCouch() {
           - couchdb${COUCH_ID}.${CORG}
 EOF
 }
+#addCouch 2 1000 ext org1

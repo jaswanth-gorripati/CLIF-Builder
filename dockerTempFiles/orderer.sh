@@ -20,20 +20,20 @@ function addOrderer() {
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${EXTERNAL_NETWORK}
       - ORDERER_HOST=orderer${ORDR_ID}.example.com
 EOF
-if [ ${KF_STR} != "" ]; then
-cat << EOF >> ${PATH}
+if [ "${KF_STR}" != "" ]; then
+cat << EOF >> ${DTSPATH}
       - CONFIGTX_ORDERER_ORDERERTYPE=kafka
-      - CONFIGTX_ORDERER_KAFKA_BROKERS=[${KF_STR}]
+      - CONFIGTX_ORDERER_KAFKA_BROKERS=${KF_STR}
       - ORDERER_KAFKA_RETRY_SHORTINTERVAL=2s
       - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
       - ORDERER_KAFKA_VERBOSE=true
 EOF
 else
-cat << EOF >> ${PATH}
+cat << EOF >> ${DTSPATH}
       - CONFIGTX_ORDERER_ORDERERTYPE=solo
 EOF
 fi
-cat << EOF >> ${PATH}
+cat << EOF >> ${DTSPATH}
       - ORDERER_GENERAL_GENESISPROFILE=${OR_P_NAME}
       - ORDERER_ABSOLUTEMAXBYTES=10 MB
       - ORDERER_PREFERREDMAXBYTES=512 KB
@@ -71,21 +71,22 @@ cat << EOF >> ${PATH}
       - ${port1}:7050
 EOF
 
-if [ ${KFS_Count} == "" ];then
-cat << EOF >> ${PATH}
+if [ "${KFS_Count}" == "" ];then
+cat << EOF >> ${DTSPATH}
     depends_on:
 EOF
     for kfs in `seq 0 ${KFS_Count}`
     do
-    cat << EOF >> ${PATH}
+    cat << EOF >> ${DTSPATH}
       - kafka${kfs}
 EOF
 done
 fi
-cat << EOF >> ${PATH}
+cat << EOF >> ${DTSPATH}
     networks:
       ${EXTERNAL_NETWORK}:
         aliases:
           - orderer${ORDR_ID}.example.com
 EOF
 }
+#addOrderer 1 1000 ext org1 

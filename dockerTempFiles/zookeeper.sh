@@ -22,4 +22,4 @@ function addZookeeper() {
           - zookeeper${ZOO_ID}
 EOF
 }
-#addZookeeper 1 ext ./zoo.yaml "server.1 zookeeprr1,server.2 zk 2"
+#addZookeeper 1 ext "server.1 zookeeprr1,server.2 zk 2"

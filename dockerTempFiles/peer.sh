@@ -44,19 +44,21 @@ cat << EOF >> ${DTSPATH}
       - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb${P_ID}.${PORG_NAME}:5984
 EOF
+fi
 cat << EOF >> ${DTSPATH}
     volumes:
       - /var/run/:/host/var/run/
       - ./crypto-config/peerOrganizations/${PORG_NAME}.example.com/peers/peer${P_ID}.${PORG_NAME}.example.com/msp:/etc/hyperledger/fabric/msp
       - ./crypto-config/peerOrganizations/${PORG_NAME}.example.com/peers/peer${P_ID}.${PORG_NAME}.example.com/tls:/etc/hyperledger/fabric/tls
       - peer${P_ID}.${PORG_NAME}.example.com:/var/hyperledger/production
-      #- ./ledger/peer${P_ID}.${${PORG_NAME}}.exapmle.com:/var/hyperledger/production
+      #- ./ledger/peer${P_ID}.${PORG_NAME}.exapmle.com:/var/hyperledger/production
     ports:
       - "${port1}:7051"
       - "${port2}:7053"
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: peer node start
 EOF
+
 if [ ${couchdb} == true ]; then 
 cat << EOF >> ${DTSPATH}
     depends_on:
@@ -69,4 +71,6 @@ cat << EOF >> ${DTSPATH}
           - peer${P_ID}.${PORG_NAME}.example.com
 
 EOF
+fi
 }
+#addPeer org1 2 2000 ext true

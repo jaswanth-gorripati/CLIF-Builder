@@ -38,3 +38,4 @@ EOF
           - kafka${KF_ID}
 EOF
 }
+#addKafka 1 1000 ext "[zoo1,zoo2]" 2

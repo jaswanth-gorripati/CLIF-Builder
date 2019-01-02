@@ -23,6 +23,8 @@
 . ./dockerTempFiles/orderer.sh
 . ./dockerTempFiles/peer.sh
 . ./dockerTempFiles/zookeeper.sh
+. ./dockerTempFiles/network.sh
+
 
 LBLUE='\033[1;34m'
 BLUE='\033[0;34m'
@@ -30,6 +32,7 @@ CYAN='\033[1;30m'
 NC='\033[0m'
 GREEN='\033[0;32m'
 ESC=$(printf "\033")
+
 
 
 function askProceed () {
@@ -228,11 +231,14 @@ printOrderer() {
 }
 
 function generateDockerFiles() {
-  addDockerFile $SELECTED_NETWORK_TYPE "" 0 ${orgDetails[0,0]} ${orgDetails[0,1]} ${orgDetails[0,2]} true $ORDERER_TYPE $NO_OF_ORDERERS $ORDERER_PROFILENAME $NO_OF_KAFKAS $NO_OF_ZOOKEEPERS
-  for D_ORG in `seq 1 $max`
+  addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME 0 ${orgDetails[0,0]} ${orgDetails[0,1]} ${orgDetails[0,2]} true $ORDERER_TYPE $NO_OF_ORDERERS $ORDERER_PROFILENAME $NO_OF_KAFKAS $NO_OF_ZOOKEEPERS
+
+  OCNT=$( expr ${#orgDetails[@]} / 3)
+  max=$(expr $OCNT - 1)
+  for DP_CNT in `seq 1 $max`
   do
     #DPath="${PWD}/${DORG_NAME}/docker-compose.yaml"
-    addDockerFile $SELECTED_NETWORK_TYPE "" $EXT_NTW_NAME $(expr $D_ORG * 1000) ${orgDetails[${D_ORG},0]} ${orgDetails[${lf},1]} ${orgDetails[${lf},2]} false
+    addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME $(expr $DP_CNT * 1000) ${orgDetails[${DP_CNT},0]} ${orgDetails[${DP_CNT},1]} ${orgDetails[${DP_CNT},2]} false
   done
   echo -e "${BROWN} Docker Files are generated ....${NC}"
 }
@@ -345,7 +351,7 @@ function OrgDetails {
   # echo "length = $(expr $COUNT)"
   #echo "${ORG[@]}"
   arrOrgDetails $(expr $COUNT - 1)
-  sleep 5
+  #sleep 5
   getCons
 }
 function installPreRequirements {
@@ -379,3 +385,6 @@ case "$userChoice" in
   2) networkSelected "v1.3";;
   3) networkSelected "v1.4";;
 esac
+
+
+
