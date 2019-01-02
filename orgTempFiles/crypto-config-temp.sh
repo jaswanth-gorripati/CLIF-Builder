@@ -71,4 +71,3 @@ EOF
 
 echo -e "${GREEN} crypto-config.yaml for ${ORG_NAME} is generated${NC}"
 }
-gCryptoPeers org1 3 false

@@ -11,6 +11,7 @@
 . ./channel/getchanneldetails.sh
 
 . ./orgTempFiles/crypto-config-temp.sh
+. ./orgTempFiles/configtx-temp.sh
 . ./orderer/getordererdetails.sh
 . ./orgDetails/getOrgDetails.sh
 LBLUE='\033[1;34m'
@@ -23,7 +24,7 @@ ESC=$(printf "\033")
 
 function askProceed () {
   echo -e "${BROWN}"
-  read -p "Continue To generate certifiavtes and network (y/n) ? " ans
+  read -p "Continue To generate certificates and network (y/n) ? " ans
   case "$ans" in
     y|Y )
       echo "proceeding ..."
@@ -106,6 +107,28 @@ function select_option {
   return $((selected - 1))
 }
 
+function gConfigFile() {
+  ORG_NAME=${orgDetails[0,0]}
+  setOrg $ORG_NAME
+  orderer_tpe=$(echo "$ORDERER_TYPE" | awk '{print tolower($0)}')
+  ctxFile
+  ctxOrgaizations ${ORG_NAME}
+  #
+  # N E E D    T O    W O R K    O N    M U L T I P L E   O R G S 
+  #
+  # ctxaddAllOrgs "org2"
+  # ctxaddAllOrgs "org3"
+  # ctxaddAllOrgs "org4"
+  ctxOrderer ${orderer_tpe} ${NO_OF_ORDERERS} ${NO_OF_KAFKAS}
+  ctxGenesisProfile ${ORG_NAME} ${orderer_tpe} ${NO_OF_ORDERERS}
+  # arr=( "Cons1" "2" "org1" "org2" )
+  # ctxAddConsor ${arr[@]}
+  ctxChannelProfile ${CHANNELS[0,0]} ${ORG_NAME}
+  # arr2=( "myc" "Cons1" "2" "org1" "org2" )
+  # ctxAllChannels ${arr2[@]}
+  ctxCapabilities
+}
+
 function gCryptoConfig() {
   OC=$( expr ${#orgDetails[@]} / 3)
   MX=$(expr $OC - 1)
@@ -113,11 +136,13 @@ function gCryptoConfig() {
   do
     if [ "${inx}" == "0" ]; then
       case $ORDERER_TYPE in
-      "SOLO") gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "true" $ORDERER_TYPE
-      "KAFKA") gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "true" $ORDERER_TYPE $NO_OF_ORDERERS
+      "SOLO") gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "true" $ORDERER_TYPE;;
+      "KAFKA") gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "true" $ORDERER_TYPE $NO_OF_ORDERERS;;
+    esac
     else
       gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "false"
     fi
+  done
     
 }
 
@@ -195,6 +220,9 @@ yourConfig() {
   arrCons
   arrChnls
   printOrderer
+  askProceed
+  gCryptoConfig
+  gConfigFile
 
 }
 getOrdererDetails() {
