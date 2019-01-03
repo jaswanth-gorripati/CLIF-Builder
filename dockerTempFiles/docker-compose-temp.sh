@@ -29,6 +29,7 @@ DTNPATH="./network.yaml"
 function addDockerFile() {
     #rm $DTNPATH $DTSPATH $DTVPATH
     echo "$@"
+    pport=$9
     SELECTED_NETWORK_TYP=$1
     EX_NTW=$3
     MNUMBER=$4
@@ -49,29 +50,30 @@ function addDockerFile() {
         addCouchVolumes $DPEER_COUNT $DORG_NAME
         for pcnt in `seq 0 $(expr $DPEER_COUNT - 1)`
         do  
-            addCouch $pcnt $MNUMBER $EX_NTW $DORG_NAME
-            addPeer $DORG_NAME $pcnt $MNUMBER $EX_NTW true
+            addCouch $pcnt $pport $EX_NTW $DORG_NAME
+            addPeer $DORG_NAME $pcnt $pport $EX_NTW true
+            pport=$(expr $pport + 1000)
         done
     else
         for pcnt in `seq 0 $(expr $DPEER_COUNT - 1)`
         do  
-            addPeer $DORG_NAME $pcnt $MNUMBER $EX_NTW false
+            addPeer $DORG_NAME $pcnt $pport $EX_NTW false
+            pport=$(expr $pport + 1000)
         done
     fi
-
     D_IS_ORDERER=$8
     if [ "${D_IS_ORDERER}" == "true" ];then 
-        D_ORDERER_TYPE=$9
-        D_ORDERER_COUNT=${10}
-        D_ORDERER_PN=${11}
+        D_ORDERER_TYPE=${10}
+        D_ORDERER_COUNT=${11}
+        D_ORDERER_PN=${12}
 
         addOrdererVolumes $D_ORDERER_COUNT
         D_ORDERER_TYPE=$(echo "$D_ORDERER_TYPE" | awk '{print tolower($0)}')
         echo ${D_ORDERER_TYPE}
         if [ ${D_ORDERER_TYPE} == "kafka" ]; then
-            D_KF_COUNT=${12}
+            D_KF_COUNT=${13}
             #echo $D_KF_COUNT
-            D_ZOO_COUNT=${13}
+            D_ZOO_COUNT=${14}
 
             D_KF_COUNT=$(expr $D_KF_COUNT - 1)
             D_ZOO_COUNT=$(expr $D_ZOO_COUNT - 1)
@@ -86,9 +88,10 @@ function addDockerFile() {
             for zoo_cnt in `seq 0 ${D_ZOO_COUNT}`
             do
                 ZOO_STRING="${ZOO_STRING}server.$(expr $zoo_cnt + 1)=zookeeper${zoo_cnt}:2888:3888 "
-                KF_ZOO_STR="zookeeper${zoo_cnt}:2181,"
+                KF_ZOO_STR="${KF_ZOO_STR}zookeeper${zoo_cnt}:2181,"
             done
             ZOO_STRING=${ZOO_STRING::-1}
+            #echo ${ZOO_STRING}
             #
             ## K A F K A   S T R I N G   
             #
@@ -96,24 +99,27 @@ function addDockerFile() {
             #echo "$(expr $D_ZOO_COUNT - 1)""
             for zoo_cnt in `seq 0 $D_ZOO_COUNT`
             do
-                addZookeeper $zoo_cnt $EX_NTW $ZOO_STRING
+                addZookeeper $zoo_cnt $EX_NTW "${ZOO_STRING}"
             done
             KF_ZOO_STR=${KF_ZOO_STR::-1}
 
             for kf_cnt in `seq 0 $D_KF_COUNT`
             do
-                KF_STRING="${KF_STRING}kafka${kf_cnt}:9092"
+                KF_STRING="${KF_STRING}kafka${kf_cnt}:9092,"
                 addKafka $kf_cnt $MNUMBER $EX_NTW $KF_ZOO_STR $D_ZOO_COUNT
             done
+            KF_STRING=${KF_STRING::-1}
             KF_STRING="${KF_STRING}]"
             for Ocnt in `seq 0 $(expr $D_ORDERER_COUNT - 1)`
             do
                 addOrderer $Ocnt $MNUMBER $EX_NTW $D_ORDERER_PN $KF_STRING $D_KF_COUNT
+                MNUMBER=$(expr $MNUMBER + 1000)
             done
         else
             for Ocnt in `seq 0 $(expr $D_ORDERER_COUNT - 1)`
             do
                 addOrderer $Ocnt $MNUMBER $EX_NTW $D_ORDERER_PN
+                MNUMBER=$(expr $MNUMBER + 1000)
             done
         fi
     fi

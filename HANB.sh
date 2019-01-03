@@ -33,6 +33,10 @@ NC='\033[0m'
 GREEN='\033[0;32m'
 ESC=$(printf "\033")
 
+OPROT=0
+PPORT=0
+CPORT=0
+
 
 
 function askProceed () {
@@ -231,14 +235,16 @@ printOrderer() {
 }
 
 function generateDockerFiles() {
-  addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME 0 ${orgDetails[0,0]} ${orgDetails[0,1]} ${orgDetails[0,2]} true $ORDERER_TYPE $NO_OF_ORDERERS $ORDERER_PROFILENAME $NO_OF_KAFKAS $NO_OF_ZOOKEEPERS
+  addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME 0 ${orgDetails[0,0]} ${orgDetails[0,1]} ${orgDetails[0,2]} true 0 $ORDERER_TYPE $NO_OF_ORDERERS $ORDERER_PROFILENAME $NO_OF_KAFKAS $NO_OF_ZOOKEEPERS
 
+  PPORT=${orgDetails[0,1]}000
   OCNT=$( expr ${#orgDetails[@]} / 3)
   max=$(expr $OCNT - 1)
   for DP_CNT in `seq 1 $max`
   do
     #DPath="${PWD}/${DORG_NAME}/docker-compose.yaml"
-    addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME ${DP_CNT}000 ${orgDetails[${DP_CNT},0]} ${orgDetails[${DP_CNT},1]} ${orgDetails[${DP_CNT},2]} false
+    addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME ${DP_CNT}000 ${orgDetails[${DP_CNT},0]} ${orgDetails[${DP_CNT},1]} ${orgDetails[${DP_CNT},2]} false $PPORT
+    PPORT=${orgDetails[$DP_CNT,1]}000
   done
   echo -e "${BROWN} Docker Files are generated ....${NC}"
 }
