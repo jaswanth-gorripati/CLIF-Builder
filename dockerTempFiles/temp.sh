@@ -10,3 +10,5 @@
 zf="zk1:2456,zk2:8765,"
 zf=${zf::-1}
 echo $zf
+dt=2
+echo ${dt}000

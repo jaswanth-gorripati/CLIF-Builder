@@ -238,7 +238,7 @@ function generateDockerFiles() {
   for DP_CNT in `seq 1 $max`
   do
     #DPath="${PWD}/${DORG_NAME}/docker-compose.yaml"
-    addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME $(expr $DP_CNT * 1000) ${orgDetails[${DP_CNT},0]} ${orgDetails[${DP_CNT},1]} ${orgDetails[${DP_CNT},2]} false
+    addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME ${DP_CNT}000 ${orgDetails[${DP_CNT},0]} ${orgDetails[${DP_CNT},1]} ${orgDetails[${DP_CNT},2]} false
   done
   echo -e "${BROWN} Docker Files are generated ....${NC}"
 }
