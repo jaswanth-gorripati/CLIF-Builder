@@ -65,8 +65,8 @@ function useCouchDb () {
     read -p "   Use Couchdb ( y/n ) :" Use_Couchdb
     echo -e "${NC}"
     case $Use_Couchdb in
-        y|Y) Use_Couchdb=true;echo $Use_Couchdb;;
-        n|N) Use_Couchdb=false;echo $Use_Couchdb;;
+        y|Y) Use_Couchdb=true;;
+        n|N) Use_Couchdb=false;;
         *) echo -e " ${RED}please enter valid response ( y/n )${NC}";useCouchDb $index;return;;
     esac
     orgDetails[$count,$index]=$Use_Couchdb

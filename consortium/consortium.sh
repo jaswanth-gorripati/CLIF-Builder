@@ -117,7 +117,7 @@ getconDetails() {
 function getConsortium() {
     clear
     ORGS=("$@")
-    echo "${ORGS[@]}"
+    #echo "${ORGS[@]}"
     if [ "$ORGS" == "" ]; then
         echo "Please pass organisation parameters"
         #exit 0

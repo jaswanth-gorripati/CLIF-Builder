@@ -72,7 +72,7 @@ readChannelConsortium() {
     if [ $canAddCons == true ]; then
         CHANNELS[$CCOUNT,$CINDEX]=$CCNAME
     else
-        echo -e "${RED} COnsortium name is not recognised .. plese enter from this list [ ${cCons[@]} ]${NC}"
+        echo -e "${RED} Consortium name is not recognised .. plese enter from this list [${cCons[@]}]${NC}"
         readChannelConsortium
         return
     fi
@@ -164,8 +164,8 @@ getChannelDetails() {
     do 
         cCons[$(expr $j - ${args[0]})]=${args[$(expr $j + 1)]}
     done
-    echo "${cOrgs[@]}"
-    echo "${cCons[@]}"
+    # echo "${cOrgs[@]}"
+    # echo "${cCons[@]}"
 
     if [ "$cOrgs" == "" ]; then
         echo "Please pass organisation parameters"
@@ -175,6 +175,7 @@ getChannelDetails() {
     if [ "$cCons" == "" ]; then
         echo "Please pass Consortium parameters"
         #exit 0
+        return
     fi
     echo -e "Enter details of the CHANNELS in the network"
     getNumberOfChannels
