@@ -26,7 +26,7 @@ EOF
 #peer${cnt}.${D_O_NAME}.example.com:
 function addPeerVolumes() {
     D_O_NAME=$2
-    for cnt in `seq 0 $1`
+    for cnt in `seq 0 $(expr $1 - 1)`
 do
     cat << EOF >> ${DTVPATH}
   peer${cnt}.${D_O_NAME}.example.com:
@@ -36,7 +36,7 @@ done
 #couchdb${cnt}.${D_O_NAME}:
 function addCouchVolumes() {
     D_O_NAME=$2
-    for cnt in `seq 0 $1`
+    for cnt in `seq 0 $(expr $1 - 1)`
     do
    cat << EOF >> ${DTVPATH}
   couchdb${cnt}.${D_O_NAME}:
@@ -44,7 +44,7 @@ EOF
 done
 }
 function addOrdererVolumes() {
-    for cnt in `seq 0 $1`
+    for cnt in `seq 0 $(expr $1 - 1)`
     do
        cat << EOF >> ${DTVPATH}
   orderer${cnt}.example.com:

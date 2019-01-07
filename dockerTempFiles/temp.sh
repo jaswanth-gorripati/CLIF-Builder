@@ -7,8 +7,17 @@
 # ${file2}
 # EOF
 
-zf="zk1:2456,zk2:8765,"
-zf=${zf::-1}
-echo $zf
-dt=2
-echo ${dt}000
+D_ZOO_COUNT=4
+for zoo_cnt in `seq 0 ${D_ZOO_COUNT}`
+do
+    ZOO_STRING="${ZOO_STRING}server.$(expr $zoo_cnt + 1)=zookeeper${zoo_cnt}:2888:3888 "
+    KF_ZOO_STR="${KF_ZOO_STR}zookeeper${zoo_cnt}:2181,"
+done
+ZOO_STRING=${ZOO_STRING::-1}
+KF_ZOO_STR=${KF_ZOO_STR::-1}
+echo $ZOO_STRING
+echo $KF_ZOO_STR
+function add() {
+    echo $1
+}
+add "${ZOO_STRING}"
