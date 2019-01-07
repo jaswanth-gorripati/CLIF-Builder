@@ -9,6 +9,7 @@ function gCleanFolder() {
 }
 function gFolder() {
     mkdir -p $PWD/${ORG_NAME}/
+    cp -rf bin/ $PWD/${ORG_NAME}/
 
 }
 
