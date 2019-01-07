@@ -19,7 +19,7 @@
 BROWN='\033[0;33m'
 NC='\033[0m'
 GREEN='\033[0;32m'
-PWD=~/HANB
+CPWD=~/HANB
 SELECTED_NETWORK_TYP=""
 DPath=""
 DTVPATH="./volume.yaml"
@@ -29,6 +29,8 @@ DTNPATH="./network.yaml"
 function addDockerFile() {
     #rm $DTNPATH $DTSPATH $DTVPATH
     echo "$@"
+    IS_F_ORG=${15}
+    echo $IS_F_ORG
     pport=$9
     SELECTED_NETWORK_TYP=$1
     EX_NTW=$3
@@ -39,7 +41,7 @@ function addDockerFile() {
     DORG_NAME=$5
     DPEER_COUNT=$6
 
-    DPath="${PWD}/${DORG_NAME}/docker-compose.yaml"
+    DPath="${CPWD}/${DORG_NAME}/docker-compose.yaml"
 
     addPeerVolumes $DPEER_COUNT $DORG_NAME
     createServiceFile
@@ -144,6 +146,15 @@ ${servicesFile}
 ${networkFile}
 EOF
 rm ${DTVPATH} ${DTSPATH} $DTNPATH
+if [ "${IS_F_ORG}" == "true" ];then 
+networkFile=$(cat ./mainOrgScripts/generateCrypto.sh)
+else
+networkFile=$(cat ./subOrgScripts/generateCrypto.sh)
+fi
+DPath="${CPWD}/${DORG_NAME}/generateCrypto.sh"
+cat << EOF > ${DPath}
+${networkFile}
+EOF
 }
 #addDockerFile "Docker-swarm-m" 2 e 0 q 1 true true KAFKA 2 qwe 2 2
 

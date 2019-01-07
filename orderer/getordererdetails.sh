@@ -12,16 +12,17 @@ ORDERER_CONSORTIUM=""
 ORDERER_PROFILENAME=""
 
 Verify() {
+    #echo $@
     val=$1
     fc=$2
-    if [ -z "$val" ]; then
-        echo -e "${RED}!!! Please enter a value"
+    if [ "$val" == "" ]; then
+        echo -e "${RED}!!! Please enter a value${NC}"
         $fc
         return;
     fi
     reg='^[1-5]{1}$'
     if [[ ! $val =~ $reg ]]; then
-        echo -e " ${RED}!!! Maximum 5 Channels can be used${NC}"
+        echo -e " ${RED}!!! Maximum 5 ${3} can be used${NC}"
         $fc
         return;
     fi
@@ -30,20 +31,21 @@ readNoOfOrderers() {
     echo -e "${LBLUE}"
     read -p "   Enter Number of Orderers to be used :   " NO_OF_ORDERERS  
     echo -e "${NC}"
-    Verify $NO_OF_ORDERERS readNoOfOrderers
+    #echo "$NO_OF_ORDERER"
+    Verify "${NO_OF_ORDERERS}" "readNoOfOrderers" "Orderer"
 }
 
 readKafkaDetails() {
     echo -e "${LBLUE}"
     read -p "   Enter Number of Kafkas to be used : " NO_OF_KAFKAS  
     echo -e "${NC}"
-    Verify $NO_OF_KAFKAS readKafkaDetails
+    Verify "${NO_OF_KAFKAS}" readKafkaDetails "Kafkas"
 }
 readZookeeperDetails() {
     echo -e "${LBLUE}"
     read -p "   Enter Number of Zookeepers to be used : " NO_OF_ZOOKEEPERS  
     echo -e "${NC}"
-    Verify $NO_OF_ZOOKEEPERS readZookeeperDetails
+    Verify "$NO_OF_ZOOKEEPERS" readZookeeperDetails "Zookeeper"
 }
 
 readOrdererProfileName() {

@@ -2,13 +2,13 @@
 BROWN='\033[0;33m'
 NC='\033[0m'
 GREEN='\033[0;32m'
-PWD=~/HANB
+CPWD=~/HANB
 
 function setOrg() {
     ORG_NAME=$1
 }
 function ctxFile() {
-    cat << EOF > $PWD/${ORG_NAME}/configtx.yaml
+    cat << EOF > $CPWD/${ORG_NAME}/configtx.yaml
 # Copyright IBM Corp. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -19,7 +19,7 @@ EOF
 }
 
 function ctxOrgaizations() {
-    cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
 ################################################################################
 #
 #   Section: Organizations
@@ -64,7 +64,7 @@ EOF
 
 function ctxaddAllOrgs() {
 ORG_NAME1=$1
-cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
     - &${ORG_NAME1}
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
@@ -73,7 +73,7 @@ cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
         # ID to load the MSP definition as
         ID: ${ORG_NAME1}MSP
 
-        MSPDir:  $PWD/${ORG_NAME1}/crypto-config/peerOrganizations/${ORG_NAME1}.example.com/msp
+        MSPDir:  $CPWD/${ORG_NAME1}/crypto-config/peerOrganizations/${ORG_NAME1}.example.com/msp
 
         AnchorPeers:
             # AnchorPeers defines the location of peers which can be used
@@ -88,7 +88,7 @@ function ctxOrderer() {
     CTXORDRTYP=$1
     CTX_NO_ORDR=$(expr $2 - 1)
     CTX_NO_KFS=$(expr $3 - 1)
-    cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
 ################################################################################
 #
 #   SECTION: Orderer
@@ -107,11 +107,11 @@ Orderer: &OrdererDefaults
 EOF
 for ordr in `seq 0 ${CTX_NO_ORDR}`
 do
-    cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
         - orderer${ordr}.example.com:7050
 EOF
 done
-    cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
     # Batch Timeout: The amount of time to wait before creating a batch
     BatchTimeout: 2s
 
@@ -137,11 +137,11 @@ done
 EOF
 for kf in `seq 0 ${CTX_NO_KFS}`
 do
-    cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
             - kafka${kf}:9092
 EOF
 done
-cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
     # Organizations is the list of orgs which are defined as participants on
     # the orderer side of the network
     Organizations:
@@ -153,7 +153,7 @@ ORG_NAME=$1
 CTXORDRTYP=$2
 CTX_NO_ORDR=$(expr $3 - 1)
 GENESIS_NAME=$4
-    cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
 ################################################################################
 #
 #   Profile
@@ -174,11 +174,11 @@ Profiles:
 EOF
 for order in `seq 0 ${CTX_NO_ORDR}`
 do
-    cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
                 - orderer${order}.example.com:7050
 EOF
 done
-    cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
             Organizations:
                 - *OrdererOrg
             Capabilities:
@@ -198,13 +198,13 @@ EOF
 
 function ctxAddConsor() {
 cons=("$@")
-cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
             ${cons[0]}:
                 Organizations:
 EOF
 for con in `seq 2 $(expr ${cons[1]} + 1)`
 do
-    cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
                     - *${cons[con]}
 EOF
 done
@@ -213,7 +213,7 @@ done
 function ctxChannelProfile() {
     chDetails=$1
     ORG_NAME=$2
-    cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
     ${chDetails}:
         Capabilities:
             <<: *ChannelCapabilities
@@ -229,7 +229,7 @@ EOF
 
 function ctxAllChannels() {
     chDetails=("$@")
-    cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
     ${chDetails[0]}:
         Capabilities:
             <<: *ChannelCapabilities
@@ -240,18 +240,18 @@ function ctxAllChannels() {
 EOF
 for chorg in `seq 3 $(expr ${chDetails[2]} + 2)`
 do
-cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
                 - *${chDetails[${chorg}]}
 EOF
 done
-cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
             Capabilities:
                 <<: *ApplicationCapabilities
 EOF
 }
 
 function ctxCapabilities() {
-    cat << EOF >> $PWD/${ORG_NAME}/configtx.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
 ################################################################################
 #
 #   SECTION: Application

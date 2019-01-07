@@ -2,19 +2,19 @@
 BROWN='\033[0;33m'
 NC='\033[0m'
 GREEN='\033[0;32m'
-PWD=~/HANB
+CPWD=~/HANB
 
 function gCleanFolder() {
-    rm -rf $PWD/*
+    rm -rf $CPWD/*
 }
 function gFolder() {
-    mkdir -p $PWD/${ORG_NAME}/
-    cp -rf bin/ $PWD/${ORG_NAME}/
+    mkdir -p $CPWD/${ORG_NAME}/
+    cp -rf bin/ $CPWD/${ORG_NAME}/
 
 }
 
 function gCryptoOrderer() {
-    cat << EOF > $PWD/${ORG_NAME}/crypto-config.yaml
+    cat << EOF > $CPWD/${ORG_NAME}/crypto-config.yaml
 # ---------------------------------------------------------------------------
 # "OrdererOrgs" - Definition of organizations managing orderer nodes
 # ---------------------------------------------------------------------------
@@ -32,12 +32,12 @@ EOF
 if [ ${ORDR_TYPE} == "KAFKA" ]; then
     for ordr in `seq 0 $(expr $NO_OF_PEERS_ORDRS - 1)`
     do
-    cat << EOF >> $PWD/${ORG_NAME}/crypto-config.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/crypto-config.yaml
       - Hostname: orderer${ordr}
 EOF
 done
 else
-    cat << EOF >> $PWD/${ORG_NAME}/crypto-config.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/crypto-config.yaml
       - Hostname: orderer0
 EOF
 fi
@@ -56,7 +56,7 @@ function gCryptoPeers() {
     if [ ${ORDERER_EXISTS} == true ]; then 
         gCryptoOrderer
     fi
-    cat << EOF >> $PWD/${ORG_NAME}/crypto-config.yaml
+    cat << EOF >> $CPWD/${ORG_NAME}/crypto-config.yaml
 # ---------------------------------------------------------------------------
 # "PeerOrgs" - Definition of organizations managing peer nodes
 # ---------------------------------------------------------------------------

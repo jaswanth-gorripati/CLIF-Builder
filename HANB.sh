@@ -24,6 +24,7 @@
 . ./dockerTempFiles/peer.sh
 . ./dockerTempFiles/zookeeper.sh
 . ./dockerTempFiles/network.sh
+C_P=$PWD
 
 
 LBLUE='\033[1;34m'
@@ -36,6 +37,7 @@ ESC=$(printf "\033")
 OPROT=0
 PPORT=0
 CPORT=0
+declare -A ORGS_SSH
 
 
 
@@ -137,13 +139,13 @@ function gConfigFile() {
   # ctxaddAllOrgs "org3"
   # ctxaddAllOrgs "org4"
   ctxOrderer ${orderer_tpe} ${NO_OF_ORDERERS} ${NO_OF_KAFKAS}
+  ctxCapabilities
   ctxGenesisProfile ${ORG_NAME} ${orderer_tpe} ${NO_OF_ORDERERS} ${ORDERER_PROFILENAME}
   # arr=( "Cons1" "2" "org1" "org2" )
   # ctxAddConsor ${arr[@]}
   ctxChannelProfile ${CHANNELS[0,0]} ${ORG_NAME}
   # arr2=( "myc" "Cons1" "2" "org1" "org2" )
   # ctxAllChannels ${arr2[@]}
-  ctxCapabilities
 }
 
 function gCryptoConfig() {
@@ -235,18 +237,62 @@ printOrderer() {
 }
 
 function generateDockerFiles() {
-  addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME 0 ${orgDetails[0,0]} ${orgDetails[0,1]} ${orgDetails[0,2]} true 0 $ORDERER_TYPE $NO_OF_ORDERERS $ORDERER_PROFILENAME $NO_OF_KAFKAS $NO_OF_ZOOKEEPERS
-
-  PPORT=${orgDetails[0,1]}000
+  addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME 0 ${orgDetails[0,0]} ${orgDetails[0,1]} ${orgDetails[0,2]} true 0 $ORDERER_TYPE $NO_OF_ORDERERS $ORDERER_PROFILENAME $NO_OF_KAFKAS $NO_OF_ZOOKEEPERS true
+  MOPath="${CPWD}/${orgDetails[0,0]}/"
+  cd $MOPath
+  #source  ./${MOPath
+  chmod +x generateCrypto.sh
+  ./generateCrypto.sh "./" ${orgDetails[0,0]} $ORDERER_PROFILENAME ${CHANNELS[0,0]}
+  cd $C_P
+  TNP=${orgDetails[0,1]}
+  PPORT=${TNP}000
   OCNT=$( expr ${#orgDetails[@]} / 3)
   max=$(expr $OCNT - 1)
   for DP_CNT in `seq 1 $max`
   do
-    #DPath="${PWD}/${DORG_NAME}/docker-compose.yaml"
+    #DPath="${CPWD}/${DORG_NAME}/docker-compose.yaml"
     addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME ${DP_CNT}000 ${orgDetails[${DP_CNT},0]} ${orgDetails[${DP_CNT},1]} ${orgDetails[${DP_CNT},2]} false $PPORT
-    PPORT=${orgDetails[$DP_CNT,1]}000
+    TNP=$(expr $TNP + ${orgDetails[$DP_CNT,1]})
+    PPORT=${TNP}000
+    MOPath="${CPWD}/${orgDetails[${DP_CNT},0]}/"
+    cd $MOPath
+    #source ./${MOPath}
+    chmod +x generateCrypto.sh
+    ./generateCrypto.sh "./" ${orgDetails[${DP_CNT},0]}
+    cd $C_P
   done
   echo -e "${BROWN} Docker Files are generated ....${NC}"
+}
+
+function readSSHofOrgs() {
+  for so_cnt in `seq 0 $1`
+  do
+    readSSH
+  done
+}
+
+function readSSH() {
+  echo -e "${BLUE}"
+    read -p "   Enter SSH address of  ${orgDetails[${$1},0]} organisation: " ORGS_SSH[${orgDetails[${$1},0]}]    
+    echo -e "${NC}"
+  if [ -z "$EXT_NTW_NAME" ]; then
+      echo -e "${RED}!!! Please enter a valid SSH address${NC}"
+      readSSH
+      return;
+  fi
+  checkSSH $1 ${ORGS_SSH[${orgDetails[${$1},0]}]}
+}
+function checkSSH() {
+    status=$(ssh -o BatchMode=yes -o ConnectTimeout=5 $2 echo ok 2>&1)
+
+  if [[ $status == ok ]] ; then
+    echo "SSH address is added"
+  elif [[ $status == "Permission denied"* ]] ; then
+    echo "Please place the Public key in the remote machine"
+  else
+    echo " SSh address is not valid , Enter again"
+    readSSH $1
+  fi
 }
 function readNetworkDeploymentType() {
   NETWORK_DEPLOY_TYPE=$(select_opt "Select the network deployment type : " "Docker-compose ( single machine )" "Docker-swarm ( single machine )" "Docker-swarm( multiple machines )")
@@ -261,7 +307,7 @@ function readNetworkName() {
     read -p "   Enter External Network name : " EXT_NTW_NAME    
     echo -e "${NC}"
   if [ -z "$EXT_NTW_NAME" ]; then
-      echo -e "${RED}!!! Please enter a valid Name${NC}"
+      echo -e "${RED}!!! Please enter a valid  Network Name${NC}"
       readNetworkName
       return;
   fi
@@ -292,6 +338,7 @@ function networkSelection() {
   SELECTED_NETWORK_TYPE=$1
   echo -e "${LBLUE}Network selected $1 ${NC}"
   if [ "$1" == "Docker-compose" ]; then
+    readNetworkName
     echo -e "${BROWN}Generating Required network files${NC}"
   else
     readNetworkName
