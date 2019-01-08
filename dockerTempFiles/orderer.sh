@@ -39,7 +39,7 @@ cat << EOF >> ${DTSPATH}
       - ORDERER_PREFERREDMAXBYTES=512 KB
       - ORDERER_HOME=/var/hyperledger/orderer
       - ORDERER_GENERAL_LOGLEVEL=debug
-      #- ORDERER_GENERAL_LEDGERTYPE=ram
+      - ORDERER_GENERAL_LEDGERTYPE=ram
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
       - CONFIGTX_ORDERER_BATCHSIZE_MAXMESSAGECOUNT=10
@@ -65,13 +65,13 @@ cat << EOF >> ${DTSPATH}
       - ./crypto-config/ordererOrganizations/example.com/orderers/orderer${ORDR_ID}.example.com/msp:/var/hyperledger/orderer/msp
       - ./crypto-config/ordererOrganizations/example.com/orderers/orderer${ORDR_ID}.example.com/tls/:/var/hyperledger/orderer/tls
       - ./crypto-config/ordererOrganizations/example.com/users:/var/hyperledger/users
-      - orderer${ORDR_ID}.example.com:/var/hyperledger/
+      - orderer${ORDR_ID}.example.com:/var/hyperledger/production/orderer
       #- ./ledger/orderer.example.com:/var/hyperledger/production/orderer
     ports:
       - ${port1}:7050
 EOF
 
-if [ "${KFS_Count}" == "" ];then
+if [ "${KFS_Count}" != "" ];then
 cat << EOF >> ${DTSPATH}
     depends_on:
 EOF

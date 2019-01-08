@@ -24,6 +24,7 @@
 . ./dockerTempFiles/peer.sh
 . ./dockerTempFiles/zookeeper.sh
 . ./dockerTempFiles/network.sh
+. ./deployMainNetwork/startMain.sh
 C_P=$PWD
 
 
@@ -58,6 +59,7 @@ function askProceed () {
     ;;
   esac
 }
+
 function select_option {
   
   # little helpers for terminal print control and key input
@@ -235,7 +237,22 @@ printOrderer() {
   echo -e "${BLUE}      Number Of Zookeepers     : $NO_OF_ZOOKEEPERS${NC}"
   fi
 }
-
+function readCCver() {
+  echo -e "${BLUE}"
+    read -p "   Enter chaincode version to install in the network : " CC_VRSN   
+    echo -e "${NC}"
+  if [ -z "$CC_VRSN" ]; then
+      echo -e "${RED}!!! Please enter a chaincode version${NC}"
+      readCCver
+      return;
+  fi
+  # reg='^[0]+$'
+  # if [[ ! $EXT_NTW_NAME =~ $reg ]]; then
+  #     echo -e " ${RED}!!! Network name must contain only Alphabets${NC}"
+  #     readNetworkName
+  #     return;
+  # fi
+}
 function generateDockerFiles() {
   addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME 0 ${orgDetails[0,0]} ${orgDetails[0,1]} ${orgDetails[0,2]} true 0 $ORDERER_TYPE $NO_OF_ORDERERS $ORDERER_PROFILENAME $NO_OF_KAFKAS $NO_OF_ZOOKEEPERS true
   MOPath="${CPWD}/${orgDetails[0,0]}/"
@@ -261,6 +278,14 @@ function generateDockerFiles() {
     ./generateCrypto.sh "./" ${orgDetails[${DP_CNT},0]}
     cd $C_P
   done
+  MOPath="${CPWD}/${orgDetails[0,0]}/"
+  readCCver
+  if [ "${ORDERER_TYPE}" == "KAFKA" ]; then
+    ORDR_PRFRD="orderer0"
+    else
+    ORDR_PRFRD="orderer"
+  fi
+  runMainNetwork  "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME $STACK_NAME ${CHANNELS[0,0]} ${orgDetails[0,0]} $CC_VRSN $ORDR_PRFRD ${orgDetails[0,1]}
   echo -e "${BROWN} Docker Files are generated ....${NC}"
 }
 

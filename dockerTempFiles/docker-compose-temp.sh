@@ -45,24 +45,6 @@ function addDockerFile() {
 
     addPeerVolumes $DPEER_COUNT $DORG_NAME
     createServiceFile
-    addCa $DORG_NAME $MNUMBER $EX_NTW
-
-    D_IS_COUCH=$7
-    if [ $D_IS_COUCH == true ];then 
-        addCouchVolumes $DPEER_COUNT $DORG_NAME
-        for pcnt in `seq 0 $(expr $DPEER_COUNT - 1)`
-        do  
-            addCouch $pcnt $pport $EX_NTW $DORG_NAME
-            addPeer $DORG_NAME $pcnt $pport $EX_NTW true
-            pport=$(expr $pport + 1000)
-        done
-    else
-        for pcnt in `seq 0 $(expr $DPEER_COUNT - 1)`
-        do  
-            addPeer $DORG_NAME $pcnt $pport $EX_NTW false
-            pport=$(expr $pport + 1000)
-        done
-    fi
     D_IS_ORDERER=$8
     if [ "${D_IS_ORDERER}" == "true" ];then 
         D_ORDERER_TYPE=${10}
@@ -125,6 +107,24 @@ function addDockerFile() {
             done
         fi
     fi
+    addCa $DORG_NAME $MNUMBER $EX_NTW
+
+    D_IS_COUCH=$7
+    if [ $D_IS_COUCH == true ];then 
+        addCouchVolumes $DPEER_COUNT $DORG_NAME
+        for pcnt in `seq 0 $(expr $DPEER_COUNT - 1)`
+        do  
+            addCouch $pcnt $pport $EX_NTW $DORG_NAME
+            addPeer $DORG_NAME $pcnt $pport $EX_NTW true
+            pport=$(expr $pport + 1000)
+        done
+    else
+        for pcnt in `seq 0 $(expr $DPEER_COUNT - 1)`
+        do  
+            addPeer $DORG_NAME $pcnt $pport $EX_NTW false
+            pport=$(expr $pport + 1000)
+        done
+    fi
     addCli $DORG_NAME $EX_NTW
     addNetwork $EX_NTW
     createTempFile
@@ -147,9 +147,19 @@ ${networkFile}
 EOF
 rm ${DTVPATH} ${DTSPATH} $DTNPATH
 if [ "${IS_F_ORG}" == "true" ];then 
-networkFile=$(cat ./mainOrgScripts/generateCrypto.sh)
+    networkFile=$(cat ./mainOrgScripts/generateCrypto.sh)
+    DOC_FILE=$(cat ./mainOrgScripts/dockerSetup.sh)
+    DPath="${CPWD}/${DORG_NAME}/dockerSetup.sh"
+    cat << EOF > ${DPath}
+${DOC_FILE}
+EOF
+    BUILD_FILE=$(cat ./mainOrgScripts/buildingNetwork.sh)
+    DPath="${CPWD}/${DORG_NAME}/buildingNetwork.sh"
+    cat << EOF > ${DPath}
+${BUILD_FILE}
+EOF
 else
-networkFile=$(cat ./subOrgScripts/generateCrypto.sh)
+    networkFile=$(cat ./subOrgScripts/generateCrypto.sh)
 fi
 DPath="${CPWD}/${DORG_NAME}/generateCrypto.sh"
 cat << EOF > ${DPath}

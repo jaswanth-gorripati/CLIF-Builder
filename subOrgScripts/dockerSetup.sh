@@ -11,7 +11,9 @@ set -o allexport
 source ./env
 set +o allexport
 
-I_PATH=$CPWD
+I_PATH=$PWD
+DOCKER_STACK_NAME=""
+EXT_NTWRK=""
 
 function ProceedFurther () {
   read -p "Continue (y/n)? " ans
@@ -62,8 +64,8 @@ function swarmRemove() {
         echo $?
         #exit 1
     fi
-    docker network rm ${EXTERNAL_NETWORK} 2>&1
-    if [ "$?" == "${EXTERNAL_NETWORK}" ]; then
+    docker network rm ${EXT_NTWRK} 2>&1
+    if [ "$?" == "${EXT_NTWRK}" ]; then
         echo $?
         #exit 1
     fi
@@ -94,10 +96,10 @@ function swarmCreate() {
         echo
     fi
     sleep 1
-    DOC_NET=$(docker network ls|grep ${EXTERNAL_NETWORK}|awk '{print $2}')
-    if [ "${DOC_NET}" != "${EXTERNAL_NETWORK}" ]; then
+    DOC_NET=$(docker network ls|grep ${EXT_NTWRK}|awk '{print $2}')
+    if [ "${DOC_NET}" != "${EXT_NTWRK}" ]; then
       echo " ---------- Creating External Network ----------"
-      docker network create --attachable ${EXTERNAL_NETWORK} --driver overlay  2>&1
+      docker network create --attachable ${EXT_NTWRK} --driver overlay  2>&1
       if [ $? -ne 0 ]; then
           echo $?
        #exit 1
@@ -105,3 +107,13 @@ function swarmCreate() {
     fi
     sleep 1
 }
+if [ "$1" == "swarmCreate" ]; then 
+EXT_NTWRK=$2
+swarmCreate
+elif [ "$1" == "removeSwarm" ]; then
+  EXT_NTWRK=$2
+  DOCKER_STACK_NAME=$3
+  removeSwarm
+  clearContainers
+  removeUnwantedImages
+fi

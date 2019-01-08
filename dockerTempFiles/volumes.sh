@@ -63,7 +63,8 @@ function addZookeeperVolumes() {
     for cnt in `seq 0 $1`
     do
        cat << EOF >> ${DTVPATH}
-  zookeeper${cnt}:
+  zookeeper${cnt}.data:
+  zookeeper${cnt}.datalog:
 EOF
 done
 }

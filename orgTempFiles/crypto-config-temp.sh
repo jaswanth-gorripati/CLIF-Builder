@@ -10,6 +10,7 @@ function gCleanFolder() {
 function gFolder() {
     mkdir -p $CPWD/${ORG_NAME}/
     cp -rf bin/ $CPWD/${ORG_NAME}/
+    cp -rf chaincode/ $CPWD/${ORG_NAME}/
 
 }
 

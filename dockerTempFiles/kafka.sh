@@ -23,6 +23,8 @@ function addKafka() {
       - KAFKA_REPLICA_FETCH_RESPONSE_MAX_BYTES=10485760
     ports:
       - 9092
+    volumes:
+      - kafka${KF_ID}:/tmp/kafka-logs
     depends_on:
 EOF
     for zoo in `seq 0 ${Zoo_count}`

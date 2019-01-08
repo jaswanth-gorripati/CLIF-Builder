@@ -37,8 +37,7 @@ cat << EOF >> ${DTSPATH}
       - /var/run/:/host/var/run/
       - ./chaincode/:/opt/gopath/src/github.com/chaincode
       - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
-      - ./:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
-      - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ./:/opt/gopath/src/github.com/hyperledger/fabric/peer/
     networks:
       ${EXTERNAL_NETWORK}:
         aliases:
