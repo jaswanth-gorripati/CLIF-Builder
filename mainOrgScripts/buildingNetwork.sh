@@ -214,7 +214,7 @@ do
     echo "===================== peer${peer}.${DOMAIN}.exapmle.com joined on the channel \"$CHANNEL_NAME\" ===================== "
     sleep $DELAY
     echo
-    peer=$(expr $peer +1)
+    peer=$(expr $peer + 1)
 done
 ##sleep 10
 #
@@ -237,7 +237,7 @@ do
     installChaincodeWithRetry $peer 
     sleep $DELAY
     echo
-    peer=$(expr $peer +1)
+    peer=$(expr $peer + 1)
 done
 #sleep 10
 #

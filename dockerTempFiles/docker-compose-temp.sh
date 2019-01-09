@@ -35,6 +35,7 @@ function addDockerFile() {
     SELECTED_NETWORK_TYP=$1
     EX_NTW=$3
     MNUMBER=$4
+    caMNUMBER=$MNUMBER
     addVersion ${SELECTED_NETWORK_TYP}
     addVolumes
 
@@ -107,7 +108,7 @@ function addDockerFile() {
             done
         fi
     fi
-    addCa $DORG_NAME $MNUMBER $EX_NTW
+    addCa $DORG_NAME $caMNUMBER $EX_NTW
 
     D_IS_COUCH=$7
     if [ $D_IS_COUCH == true ];then 

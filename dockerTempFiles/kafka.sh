@@ -7,6 +7,7 @@ function addKafka() {
     EXTERNAL_NETWORK=$3
     zoo_str=$4
     Zoo_count=$5
+    K_ID=$(expr $KF_ID + 1)
     cat << EOF >> ${DTSPATH}
   kafka${KF_ID}:
     image: hyperledger/fabric-kafka:x86_64-0.4.6
@@ -16,9 +17,9 @@ function addKafka() {
       - KAFKA_MESSAGE_MAX_BYTES=1000012
       - KAFKA_REPLICA_FETCH_MAX_BYTES=1048576
       - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
-      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
-      - KAFKA_MIN_INSYNC_REPLICAS=2
-      - KAFKA_BROKER_ID=0
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=1
+      - KAFKA_MIN_INSYNC_REPLICAS=1
+      - KAFKA_BROKER_ID=${K_ID}
       - KAFKA_ZOOKEEPER_CONNECT=${zoo_str}
       - KAFKA_REPLICA_FETCH_RESPONSE_MAX_BYTES=10485760
     ports:
