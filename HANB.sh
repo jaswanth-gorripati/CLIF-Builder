@@ -296,10 +296,23 @@ function generateDockerFiles() {
   startSwarmNetwork "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME ${T_ORGS[@]} 
   runMainNetwork  "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME $STACK_NAME ${CHANNELS[0,0]} ${orgDetails[0,0]} $CC_VRSN $ORDR_PRFRD ${orgDetails[0,1]}
   ad_cnt=$(expr ${#T_ORGS[@]} - 1)
-  for og in `seq 1 ${#T_ORGS[@]}`
+  for og in `seq 1 $ad_cnt`
   do
-    addNewOrg ${T_ORGS[0]} ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE
-    AddOrgToNetwork ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE $STACK_NAME "mycc" $CC_VRSN
+    addNewOrg ${T_ORGS[0]} ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE ${orgDetails[0,1]}
+    if [ "$og" == "1" ]; then
+      updateChannelConfig ${T_ORGS[0]} ${T_ORGS[$og]} ${CHANNELS[0,0]}
+    else
+      t_og=$(expr $og - 1)
+      tmp=1
+      for scn in `seq 1 $t_og`
+      do
+        m_scn=$(expr $scr - 1)
+        signChannelConfig ${T_ORGS[$m_scn]} ${T_ORGS[$scn]} ${CHANNELS[0,0]} ${T_ORGS[$og]} ${orgDetails[$scn,1]}
+        tmp=$scn
+      done
+      updateChannelConfig ${T_ORGS[$tmp]} ${T_ORGS[$og]} ${CHANNELS[0,0]}
+    fi
+    AddOrgToNetwork ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE $STACK_NAME "mycc" $CC_VRSN ${orgDetails[$og,1]}
   done
 
 }

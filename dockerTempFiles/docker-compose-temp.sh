@@ -181,6 +181,7 @@ DPath="${CPWD}/${DORG_NAME}/generateCrypto.sh"
 cat << EOF > ${DPath}
 ${networkFile}
 EOF
+chmod +x ${CPWD}/${DORG_NAME}/*.sh
 }
 #addDockerFile "Docker-swarm-m" 2 e 0 q 1 true true KAFKA 2 qwe 2 2
 

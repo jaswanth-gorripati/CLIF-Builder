@@ -2,16 +2,18 @@
 CHANNEL_NAME=$2
 DOMAIN=$1
 ORDERER_TYPE="$3"
+P_CN=$(expr $4 - 1)
+M_DMIN=$5
 echo $DOMAIN
 getOrderer() {
-  if [ "$ORDERER_TYPE" == "kafka" ];then
+  if [ "$ORDERER_TYPE" == "KAFKA" ];then
     echo "KAFKA"
     export ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer0.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
     export ORDERER_URL=orderer0.example.com
     else
     echo "NOT KAFKA"
-    export ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
-    export ORDERER_URL=orderer.example.com
+    export ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer0.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+    export ORDERER_URL=orderer0.example.com
   fi
   
 }
@@ -28,7 +30,7 @@ which jq
 
 configtxlator proto_decode --input config_block.pb --type common.Block | jq .data.data[0].payload.data.config > config.json
 
-jq -s '.[0] * {"channel_group":{"groups":{"Application":{"groups": {"'$DOMAIN'MSP":.[1]}}}}}' config.json ./channel-artifacts/${DOMAIN}.json > modified_config.json
+jq -s '.[0] * {"channel_group":{"groups":{"Application":{"groups": {"'$DOMAIN'MSP":.[1]}}}}}' config.json ./${DOMAIN}.json > modified_config.json
 
 configtxlator proto_encode --input config.json --type common.Config --output config.pb
 
@@ -41,12 +43,11 @@ configtxlator proto_decode --input ${DOMAIN}_update.pb --type common.ConfigUpdat
 echo '{"payload":{"header":{"channel_header":{"channel_id":"'$CHANNEL_NAME'", "type":2}},"data":{"config_update":'$(cat ${DOMAIN}_update.json)'}}}' | jq . > ${DOMAIN}_update_in_envelope.json
 
 configtxlator proto_encode --input ${DOMAIN}_update_in_envelope.json --type common.Envelope --output ${DOMAIN}_update_in_envelope.pb
-
-peer channel signconfigtx -f ${DOMAIN}_update_in_envelope.pb
-
-peer channel update -f ${DOMAIN}_update_in_envelope.pb -c $CHANNEL_NAME -o $ORDERER_URL:7050 --tls --cafile $ORDERER_CA 2>&1
-if [ $? -ne 0 ];then
-  echo "******************** FAILED TO ADD $DOMAIN INTO THE NETWORK *********************"
-else
-  echo "******************** $DOMAIN ORGANISATION ADDED TO NETWORK **********************"
-exit 0
+peer=0
+while [ "$peer" != "$P_CN" ]
+do
+    export CORE_PEER_ADDRESS=peer$peer.${M_DMIN}.example.com:7051
+    peer channel signconfigtx -f ${DOMAIN}_update_in_envelope.pb
+    peer=$(expr $peer + 1)
+done
+export CORE_PEER_ADDRESS=peer0.${M_DMIN}.example.com:7051

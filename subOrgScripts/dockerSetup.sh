@@ -150,7 +150,7 @@ function buildNetwork() {
   echo -e "${NC}"
   sleep 90
   CLI_CONTAINER=$(docker ps |grep ${C_ORG}_cli|awk '{print $1}')
-  docker exec $CLI_CONTAINER ./scripts/joinNetwork.sh $C_ORG $CH_NAME $CC_NAME $CC_VER $OR_AD $CC_PTH
+  docker exec $CLI_CONTAINER ./joinNetwork.sh $C_ORG $CH_NAME $CC_NAME $CC_VER $OR_AD $CC_PTH $P_CNT
 }
 
 if [ "$1" == "swarmCreate" ]; then 
@@ -171,5 +171,6 @@ elif [ "$1" == "buildNetwork" ]; then
   CC_VER=$6
   OR_AD=$7
   CC_PTH=$8
+  P_CNT=$(expr $9 - 1)
   buildNetwork
 fi
