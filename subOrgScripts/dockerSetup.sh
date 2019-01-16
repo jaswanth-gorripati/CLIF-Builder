@@ -6,14 +6,17 @@ BLUE='\033[0;34m'
 LBLUE='\033[1;34m'
 NC='\033[0m'
 GREEN='\033[0;32m'
+MPT=~/HAND
 
-set -o allexport
-source ./env
-set +o allexport
+# set -o allexport
+# source ./env
+# set +o allexport
 
 I_PATH=$PWD
+C_ORG=""
 DOCKER_STACK_NAME=""
 EXT_NTWRK=""
+CH_NAME=""
 
 function ProceedFurther () {
   read -p "Continue (y/n)? " ans
@@ -90,10 +93,14 @@ function swarmCreate() {
             exit 1
         fi
         echo " ---------- Creating Token to join  other ORGs as Manager ----------"
-        docker swarm join-token manager | awk 'NR==3 {print}' > token.txt
+        docker swarm join-token manager | awk 'NR==3 {print}' > tokenToJoinNetwork.sh
         echo "TOKEN TO join swarm as manager "
-        cat token.txt
+        cat tokenToJoinNetwork.sh
+        chmod +x tokenToJoinNetwork.sh
         echo
+      else
+        echo -e "${RED} This node is already in Swarm mode !!${NC}" 
+        exit 1
     fi
     sleep 1
     DOC_NET=$(docker network ls|grep ${EXT_NTWRK}|awk '{print $2}')
@@ -107,13 +114,62 @@ function swarmCreate() {
     fi
     sleep 1
 }
+
+function swarmJoin() {
+    SWARM_MODE=$(docker info | grep Swarm | awk '{print $2}')
+    echo "SWARM_MODE = ${SWARM_MODE}"
+    if [ "${SWARM_MODE}" != "active" ]; then
+      if [ -f ".token.sh" ]; then
+        #chmod +x token.sh
+        ./tokenToJoinNetwork.sh
+      else
+        echo "Docker Swarm join token not found ... Exiting :("
+        exit 1
+      fi
+    fi
+    sleep 1
+    DOC_NET=$(docker network ls|grep ${EXTERNAL_NETWORK}|awk '{print $2}')
+    if [ "${DOC_NET}" != "${EXTERNAL_NETWORK}" ]; then
+          echo "External network not found ... Exiting :("
+          exit 1
+    fi
+    sleep 1
+}
+
+function buildNetwork() {
+  echo -e "${GREEN}Deploying  below services into the network${NC}${BROWN}"
+  docker stack deploy ${DOCKER_STACK_NAME} -c docker-compose.yaml 2>&1
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}ERROR !!!! Unable to start network${NC}"
+    CLI_CONTAINER=$(docker ps |grep ${C_ORG}_cli|awk '{print $1}')
+    echo -e "${RED} ERROR LOGS from CLI:"
+    docker logs -f ${CLI_CONTAINER}
+    echo -e "${NC}"
+    exit 1
+  fi
+  echo -e "${NC}"
+  sleep 90
+  CLI_CONTAINER=$(docker ps |grep ${C_ORG}_cli|awk '{print $1}')
+  docker exec $CLI_CONTAINER ./scripts/joinNetwork.sh $C_ORG $CH_NAME $CC_NAME $CC_VER $OR_AD $CC_PTH
+}
+
 if [ "$1" == "swarmCreate" ]; then 
-EXT_NTWRK=$2
-swarmCreate
+  EXT_NTWRK=$2
+  swarmCreate
 elif [ "$1" == "removeSwarm" ]; then
   EXT_NTWRK=$2
   DOCKER_STACK_NAME=$3
   removeSwarm
   clearContainers
   removeUnwantedImages
+elif [ "$1" == "buildNetwork" ]; then
+  #joinSwarm $2
+  DOCKER_STACK_NAME=$2
+  C_ORG=$3
+  CH_NAME=$4
+  CC_NAME=$5
+  CC_VER=$6
+  OR_AD=$7
+  CC_PTH=$8
+  buildNetwork
 fi

@@ -159,8 +159,23 @@ EOF
     cat << EOF > ${DPath}
 ${BUILD_FILE}
 EOF
+    nof=$(cat ./mainOrgScripts/addNewOrg.sh)
+    DPath="${CPWD}/${DORG_NAME}/addNewOrg.sh"
+    cat << EOF > ${DPath}
+${nof}
+EOF
 else
     networkFile=$(cat ./subOrgScripts/generateCrypto.sh)
+    SUB_DOC_FILE=$(cat ./subOrgScripts/dockerSetup.sh)
+    DPath="${CPWD}/${DORG_NAME}/dockerSetup.sh"
+    cat << EOF > ${DPath}
+${SUB_DOC_FILE}
+EOF
+    SUB_Join_FILE=$(cat ./subOrgScripts/joinNetwork.sh)
+    DPath="${CPWD}/${DORG_NAME}/joinNetwork.sh"
+    cat << EOF > ${DPath}
+${SUB_Join_FILE}
+EOF
 fi
 DPath="${CPWD}/${DORG_NAME}/generateCrypto.sh"
 cat << EOF > ${DPath}

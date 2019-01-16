@@ -14,7 +14,7 @@ ORDR_ADRS=orderer0
 P_CNT=$6
 DELAY="3"
 TIMEOUT="10"
-LANGUAGE="node"
+LANGUAGE="golang"
 COUNTER=1
 MAX_RETRY=5
 INS_RETRY=3
@@ -254,4 +254,3 @@ echo -e "${GREEN}"
 echo "========== Attempting to Query peer0.${DOMAIN}.exapmle.com ...$(($(date +%s)-starttime)) secs =========="
 echo -e "${NC}"
 chainQuery
-exit 0

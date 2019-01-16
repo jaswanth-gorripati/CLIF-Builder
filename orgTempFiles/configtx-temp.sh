@@ -18,7 +18,7 @@ function ctxFile() {
 EOF
 }
 
-function ctxOrgaizations() {
+function addOrgTxt() {
     cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
 ################################################################################
 #
@@ -29,7 +29,11 @@ function ctxOrgaizations() {
 #
 ################################################################################
 Organizations:
-
+EOF
+}
+function ctxOrgaizations() {
+    addOrgTxt
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
     # SampleOrg defines an MSP using the sampleconfig.  It should never be used
     # in production but may be used as a template for other definitions
     - &OrdererOrg
@@ -64,6 +68,7 @@ EOF
 
 function ctxaddAllOrgs() {
 ORG_NAME1=$1
+addOrgTxt
 cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
     - &${ORG_NAME1}
         # DefaultOrg defines the organization which is used in the sampleconfig

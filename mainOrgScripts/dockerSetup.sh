@@ -14,6 +14,7 @@ set +o allexport
 I_PATH=$PWD
 DOCKER_STACK_NAME=""
 EXT_NTWRK=""
+MPT=~/HAND
 
 function ProceedFurther () {
   read -p "Continue (y/n)? " ans
@@ -90,9 +91,10 @@ function swarmCreate() {
             exit 1
         fi
         echo " ---------- Creating Token to join  other ORGs as Manager ---------- ${NC}"
-        docker swarm join-token manager | awk 'NR==3 {print}' > tokenToJoinNetwork.txt
+        docker swarm join-token manager | awk 'NR==3 {print}' > tokenToJoinNetwork.sh
         echo -e "${LBLUE}TOKEN TO join swarm as manager ${BROWN}"
-        cat tokenToJoinNetwork.txt
+        cat tokenToJoinNetwork.sh
+        chmod +x tokenToJoinNetwork.sh
         echo -e "${NC}${GREEN}"
     fi
     sleep 1
@@ -108,6 +110,17 @@ function swarmCreate() {
     sleep 1
 }
 
+function sendToken() {
+  # MN_ORG=$2
+  # C_PD=$PWD
+  # cd $MPT/$MN_ORG/
+  orgs=("${@:3}")
+  for org in ${orgs[@]}
+  do 
+     cp ./tokenToJoinNetwork.sh $MPT/$org/
+  done
+  # cd $C_PD
+}
 function deployServices() {
   echo -e "${GREEN}Deploying  below services into the network${NC}${BROWN}"
   docker stack deploy ${DOCKER_STACK_NAME} -c docker-compose.yaml 2>&1
@@ -139,4 +152,7 @@ elif [ "$1" == "deployServices" ]; then
   DOCKER_STACK_NAME=$2
   deployServices
   sleep 30
+elif [ "$1" == "sendJoinToken" ]; then
+  ar=$@
+  sendToken ${ar[@]}
 fi
