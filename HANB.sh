@@ -306,7 +306,7 @@ function generateDockerFiles() {
       tmp=1
       for scn in `seq 1 $t_og`
       do
-        m_scn=$(expr $scr - 1)
+        m_scn=$(expr $scn - 1)
         signChannelConfig ${T_ORGS[$m_scn]} ${T_ORGS[$scn]} ${CHANNELS[0,0]} ${T_ORGS[$og]} ${orgDetails[$scn,1]}
         tmp=$scn
       done

@@ -133,8 +133,8 @@ function signChannelConfig() {
     m_org=$1
     ad_org=$2
     CH_NME=$3
-    sin_org=$5
-    p_cnt=$6
+    sin_org=$4
+    p_cnt=$5
     tr="$"
     cat << EOF > ~/HANB/${ad_org}/signChannelConfig.sh
 #!/bin/bash
