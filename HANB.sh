@@ -24,6 +24,8 @@
 . ./dockerTempFiles/peer.sh
 . ./dockerTempFiles/zookeeper.sh
 . ./dockerTempFiles/network.sh
+. ./deployMainNetwork/startMain.sh
+C_P=$PWD
 
 
 LBLUE='\033[1;34m'
@@ -36,6 +38,7 @@ ESC=$(printf "\033")
 OPROT=0
 PPORT=0
 CPORT=0
+declare -A ORGS_SSH
 
 
 
@@ -56,6 +59,7 @@ function askProceed () {
     ;;
   esac
 }
+
 function select_option {
   
   # little helpers for terminal print control and key input
@@ -124,47 +128,7 @@ function select_option {
   return $((selected - 1))
 }
 
-function gConfigFile() {
-  ORG_NAME=${orgDetails[0,0]}
-  setOrg $ORG_NAME
-  orderer_tpe=$(echo "$ORDERER_TYPE" | awk '{print tolower($0)}')
-  ctxFile
-  ctxOrgaizations ${ORG_NAME}
-  #
-  # N E E D    T O    W O R K    O N    M U L T I P L E   O R G S 
-  #
-  # ctxaddAllOrgs "org2"
-  # ctxaddAllOrgs "org3"
-  # ctxaddAllOrgs "org4"
-  ctxOrderer ${orderer_tpe} ${NO_OF_ORDERERS} ${NO_OF_KAFKAS}
-  ctxGenesisProfile ${ORG_NAME} ${orderer_tpe} ${NO_OF_ORDERERS} ${ORDERER_PROFILENAME}
-  # arr=( "Cons1" "2" "org1" "org2" )
-  # ctxAddConsor ${arr[@]}
-  ctxChannelProfile ${CHANNELS[0,0]} ${ORG_NAME}
-  # arr2=( "myc" "Cons1" "2" "org1" "org2" )
-  # ctxAllChannels ${arr2[@]}
-  ctxCapabilities
-}
-
-function gCryptoConfig() {
-  OC=$( expr ${#orgDetails[@]} / 3)
-  MX=$(expr $OC - 1)
-  gCleanFolder
-  for inx in `seq 0 $MX`
-  do
-    if [ "${inx}" == "0" ]; then
-      case $ORDERER_TYPE in
-      "SOLO") gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "true" $ORDERER_TYPE;;
-      "KAFKA") gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "true" $ORDERER_TYPE $NO_OF_ORDERERS;;
-    esac
-    else
-      gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "false"
-    fi
-  done
-    
-}
-
-
+declare -A T_ORGS
 arrOrgDetails() {
     #echo $1
     OCNT=$( expr ${#orgDetails[@]} / 3)
@@ -179,7 +143,7 @@ arrOrgDetails() {
       echo -e "    ${BLUE}Name             : ${orgDetails[${lf},0]}"
       echo -e "    Peers count      : ${orgDetails[${lf},1]}"
       echo -e "    Is using CouchDb : ${orgDetails[${lf},2]} ${NC}"
-        
+      T_ORGS[${lf}]=${orgDetails[${lf},0]}
     done
     #echo ${ORG[@]}
 }
@@ -233,20 +197,155 @@ printOrderer() {
   echo -e "${BLUE}      Number Of Zookeepers     : $NO_OF_ZOOKEEPERS${NC}"
   fi
 }
+function gConfigFile() {
+  ORG_NAME=${orgDetails[0,0]}
+  setOrg $ORG_NAME
+  orderer_tpe=$(echo "$ORDERER_TYPE" | awk '{print tolower($0)}')
+  ctxFile
+  ctxOrgaizations ${ORG_NAME}
+  #
+  # N E E D    T O    W O R K    O N    M U L T I P L E   O R G S 
+  #
+  # ctxaddAllOrgs "org2"
+  # ctxaddAllOrgs "org3"
+  # ctxaddAllOrgs "org4"
+  ctxOrderer ${orderer_tpe} ${NO_OF_ORDERERS} ${NO_OF_KAFKAS}
+  ctxCapabilities
+  ctxGenesisProfile ${ORG_NAME} ${orderer_tpe} ${NO_OF_ORDERERS} ${ORDERER_PROFILENAME}
+  # arr=( "Cons1" "2" "org1" "org2" )
+  # ctxAddConsor ${arr[@]}
+  ctxChannelProfile ${CHANNELS[0,0]} ${ORG_NAME}
+  # arr2=( "myc" "Cons1" "2" "org1" "org2" )
+  # ctxAllChannels ${arr2[@]}
+  cf_o_org=$(expr ${#T_ORGS[@]} - 1)
+  for conf_cnt in `seq 1 $cf_o_org`
+  do
+    ORG_NAME=${T_ORGS[$conf_cnt]}
+    setOrg $ORG_NAME
+    ctxFile
+    ctxaddAllOrgs ${T_ORGS[$conf_cnt]}
+  done
+}
 
+function gCryptoConfig() {
+  OC=$( expr ${#orgDetails[@]} / 3)
+  MX=$(expr $OC - 1)
+  gCleanFolder
+  for inx in `seq 0 $MX`
+  do
+    if [ "${inx}" == "0" ]; then
+      case $ORDERER_TYPE in
+      "SOLO") gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "true" $ORDERER_TYPE;;
+      "KAFKA") gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "true" $ORDERER_TYPE $NO_OF_ORDERERS;;
+    esac
+    else
+      gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "false"
+    fi
+  done
+    
+}
+function readCCver() {
+  echo -e "${BLUE}"
+    read -p "   Enter chaincode version to install in the network : " CC_VRSN   
+    echo -e "${NC}"
+  if [ -z "$CC_VRSN" ]; then
+      echo -e "${RED}!!! Please enter a chaincode version${NC}"
+      readCCver
+      return;
+  fi
+  # reg='^[0]+$'
+  # if [[ ! $EXT_NTW_NAME =~ $reg ]]; then
+  #     echo -e " ${RED}!!! Network name must contain only Alphabets${NC}"
+  #     readNetworkName
+  #     return;
+  # fi
+}
 function generateDockerFiles() {
-  addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME 0 ${orgDetails[0,0]} ${orgDetails[0,1]} ${orgDetails[0,2]} true 0 $ORDERER_TYPE $NO_OF_ORDERERS $ORDERER_PROFILENAME $NO_OF_KAFKAS $NO_OF_ZOOKEEPERS
-
-  PPORT=${orgDetails[0,1]}000
+  addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME 0 ${orgDetails[0,0]} ${orgDetails[0,1]} ${orgDetails[0,2]} true 0 $ORDERER_TYPE $NO_OF_ORDERERS $ORDERER_PROFILENAME $NO_OF_KAFKAS $NO_OF_ZOOKEEPERS true
+  MOPath="${CPWD}/${orgDetails[0,0]}/"
+  cd $MOPath
+  #source  ./${MOPath
+  chmod +x generateCrypto.sh
+  ./generateCrypto.sh "./" ${orgDetails[0,0]} $ORDERER_PROFILENAME ${CHANNELS[0,0]}
+  cd $C_P
+  TNP=${orgDetails[0,1]}
+  PPORT=${TNP}000
   OCNT=$( expr ${#orgDetails[@]} / 3)
   max=$(expr $OCNT - 1)
   for DP_CNT in `seq 1 $max`
   do
-    #DPath="${PWD}/${DORG_NAME}/docker-compose.yaml"
+    #DPath="${CPWD}/${DORG_NAME}/docker-compose.yaml"
     addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME ${DP_CNT}000 ${orgDetails[${DP_CNT},0]} ${orgDetails[${DP_CNT},1]} ${orgDetails[${DP_CNT},2]} false $PPORT
-    PPORT=${orgDetails[$DP_CNT,1]}000
+    TNP=$(expr $TNP + ${orgDetails[$DP_CNT,1]})
+    PPORT=${TNP}000
+    MOPath="${CPWD}/${orgDetails[${DP_CNT},0]}/"
+    cd $MOPath
+    #source ./${MOPath}
+    chmod +x generateCrypto.sh
+    ./generateCrypto.sh "./" ${orgDetails[${DP_CNT},0]} ${orgDetails[0,0]}
+    cd $C_P
   done
   echo -e "${BROWN} Docker Files are generated ....${NC}"
+  MOPath="${CPWD}/${orgDetails[0,0]}/"
+  readCCver
+  if [ "${ORDERER_TYPE}" == "KAFKA" ]; then
+    ORDR_PRFRD="orderer0"
+    else
+    ORDR_PRFRD="orderer"
+  fi
+  startSwarmNetwork "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME ${T_ORGS[@]} 
+  runMainNetwork  "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME $STACK_NAME ${CHANNELS[0,0]} ${orgDetails[0,0]} $CC_VRSN $ORDR_PRFRD ${orgDetails[0,1]}
+  ad_cnt=$(expr ${#T_ORGS[@]} - 1)
+  for og in `seq 1 $ad_cnt`
+  do
+    addNewOrg ${T_ORGS[0]} ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE ${orgDetails[0,1]}
+    if [ "$og" == "1" ]; then
+      updateChannelConfig ${T_ORGS[0]} ${T_ORGS[$og]} ${CHANNELS[0,0]}
+    else
+      t_og=$(expr $og - 1)
+      tmp=1
+      for scn in `seq 1 $t_og`
+      do
+        m_scn=$(expr $scn - 1)
+        signChannelConfig ${T_ORGS[$m_scn]} ${T_ORGS[$scn]} ${CHANNELS[0,0]} ${T_ORGS[$og]} ${orgDetails[$scn,1]}
+        tmp=$scn
+      done
+      updateChannelConfig ${T_ORGS[$tmp]} ${T_ORGS[$og]} ${CHANNELS[0,0]}
+    fi
+    AddOrgToNetwork ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE $STACK_NAME "mycc" $CC_VRSN ${orgDetails[$og,1]}
+  done
+
+}
+
+function readSSHofOrgs() {
+  for so_cnt in `seq 0 $1`
+  do
+    readSSH
+  done
+}
+
+function readSSH() {
+  echo -e "${BLUE}"
+    read -p "   Enter SSH address of  ${orgDetails[${$1},0]} organisation: " ORGS_SSH[${orgDetails[${$1},0]}]    
+    echo -e "${NC}"
+  if [ -z "$EXT_NTW_NAME" ]; then
+      echo -e "${RED}!!! Please enter a valid SSH address${NC}"
+      readSSH
+      return;
+  fi
+  checkSSH $1 ${ORGS_SSH[${orgDetails[${$1},0]}]}
+}
+function checkSSH() {
+    status=$(ssh -o BatchMode=yes -o ConnectTimeout=5 $2 echo ok 2>&1)
+
+  if [[ $status == ok ]] ; then
+    echo "SSH address is added"
+  elif [[ $status == "Permission denied"* ]] ; then
+    echo "Please place the Public key in the remote machine"
+  else
+    echo " SSh address is not valid , Enter again"
+    readSSH $1
+  fi
 }
 function readNetworkDeploymentType() {
   NETWORK_DEPLOY_TYPE=$(select_opt "Select the network deployment type : " "Docker-compose ( single machine )" "Docker-swarm ( single machine )" "Docker-swarm( multiple machines )")
@@ -261,7 +360,7 @@ function readNetworkName() {
     read -p "   Enter External Network name : " EXT_NTW_NAME    
     echo -e "${NC}"
   if [ -z "$EXT_NTW_NAME" ]; then
-      echo -e "${RED}!!! Please enter a valid Name${NC}"
+      echo -e "${RED}!!! Please enter a valid  Network Name${NC}"
       readNetworkName
       return;
   fi
@@ -292,6 +391,7 @@ function networkSelection() {
   SELECTED_NETWORK_TYPE=$1
   echo -e "${LBLUE}Network selected $1 ${NC}"
   if [ "$1" == "Docker-compose" ]; then
+    readNetworkName
     echo -e "${BROWN}Generating Required network files${NC}"
   else
     readNetworkName

@@ -19,7 +19,7 @@
 BROWN='\033[0;33m'
 NC='\033[0m'
 GREEN='\033[0;32m'
-PWD=~/HANB
+CPWD=~/HANB
 SELECTED_NETWORK_TYP=""
 DPath=""
 DTVPATH="./volume.yaml"
@@ -29,38 +29,23 @@ DTNPATH="./network.yaml"
 function addDockerFile() {
     #rm $DTNPATH $DTSPATH $DTVPATH
     echo "$@"
+    IS_F_ORG=${15}
+    echo $IS_F_ORG
     pport=$9
     SELECTED_NETWORK_TYP=$1
     EX_NTW=$3
     MNUMBER=$4
+    caMNUMBER=$MNUMBER
     addVersion ${SELECTED_NETWORK_TYP}
     addVolumes
 
     DORG_NAME=$5
     DPEER_COUNT=$6
 
-    DPath="${PWD}/${DORG_NAME}/docker-compose.yaml"
+    DPath="${CPWD}/${DORG_NAME}/docker-compose.yaml"
 
     addPeerVolumes $DPEER_COUNT $DORG_NAME
     createServiceFile
-    addCa $DORG_NAME $MNUMBER $EX_NTW
-
-    D_IS_COUCH=$7
-    if [ $D_IS_COUCH == true ];then 
-        addCouchVolumes $DPEER_COUNT $DORG_NAME
-        for pcnt in `seq 0 $(expr $DPEER_COUNT - 1)`
-        do  
-            addCouch $pcnt $pport $EX_NTW $DORG_NAME
-            addPeer $DORG_NAME $pcnt $pport $EX_NTW true
-            pport=$(expr $pport + 1000)
-        done
-    else
-        for pcnt in `seq 0 $(expr $DPEER_COUNT - 1)`
-        do  
-            addPeer $DORG_NAME $pcnt $pport $EX_NTW false
-            pport=$(expr $pport + 1000)
-        done
-    fi
     D_IS_ORDERER=$8
     if [ "${D_IS_ORDERER}" == "true" ];then 
         D_ORDERER_TYPE=${10}
@@ -123,6 +108,24 @@ function addDockerFile() {
             done
         fi
     fi
+    addCa $DORG_NAME $caMNUMBER $EX_NTW
+
+    D_IS_COUCH=$7
+    if [ $D_IS_COUCH == true ];then 
+        addCouchVolumes $DPEER_COUNT $DORG_NAME
+        for pcnt in `seq 0 $(expr $DPEER_COUNT - 1)`
+        do  
+            addCouch $pcnt $pport $EX_NTW $DORG_NAME
+            addPeer $DORG_NAME $pcnt $pport $EX_NTW true
+            pport=$(expr $pport + 1000)
+        done
+    else
+        for pcnt in `seq 0 $(expr $DPEER_COUNT - 1)`
+        do  
+            addPeer $DORG_NAME $pcnt $pport $EX_NTW false
+            pport=$(expr $pport + 1000)
+        done
+    fi
     addCli $DORG_NAME $EX_NTW
     addNetwork $EX_NTW
     createTempFile
@@ -144,6 +147,41 @@ ${servicesFile}
 ${networkFile}
 EOF
 rm ${DTVPATH} ${DTSPATH} $DTNPATH
+if [ "${IS_F_ORG}" == "true" ];then 
+    networkFile=$(cat ./mainOrgScripts/generateCrypto.sh)
+    DOC_FILE=$(cat ./mainOrgScripts/dockerSetup.sh)
+    DPath="${CPWD}/${DORG_NAME}/dockerSetup.sh"
+    cat << EOF > ${DPath}
+${DOC_FILE}
+EOF
+    BUILD_FILE=$(cat ./mainOrgScripts/buildingNetwork.sh)
+    DPath="${CPWD}/${DORG_NAME}/buildingNetwork.sh"
+    cat << EOF > ${DPath}
+${BUILD_FILE}
+EOF
+    nof=$(cat ./mainOrgScripts/addNewOrg.sh)
+    DPath="${CPWD}/${DORG_NAME}/addNewOrg.sh"
+    cat << EOF > ${DPath}
+${nof}
+EOF
+else
+    networkFile=$(cat ./subOrgScripts/generateCrypto.sh)
+    SUB_DOC_FILE=$(cat ./subOrgScripts/dockerSetup.sh)
+    DPath="${CPWD}/${DORG_NAME}/dockerSetup.sh"
+    cat << EOF > ${DPath}
+${SUB_DOC_FILE}
+EOF
+    SUB_Join_FILE=$(cat ./subOrgScripts/joinNetwork.sh)
+    DPath="${CPWD}/${DORG_NAME}/joinNetwork.sh"
+    cat << EOF > ${DPath}
+${SUB_Join_FILE}
+EOF
+fi
+DPath="${CPWD}/${DORG_NAME}/generateCrypto.sh"
+cat << EOF > ${DPath}
+${networkFile}
+EOF
+chmod +x ${CPWD}/${DORG_NAME}/*.sh
 }
 #addDockerFile "Docker-swarm-m" 2 e 0 q 1 true true KAFKA 2 qwe 2 2
 

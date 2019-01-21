@@ -16,6 +16,9 @@ function addZookeeper() {
       - 2181
       - 2888
       - 3888
+    volumes:
+      - zookeeper${ZOO_ID}.data:/data
+      - zookeeper${ZOO_ID}.datalog:/datalog
     networks:
       ${EXTERNAL_NETWORK}:
         aliases:

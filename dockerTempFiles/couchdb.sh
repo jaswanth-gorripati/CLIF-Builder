@@ -16,6 +16,8 @@ function addCouch() {
         condition: on-failure
     ports:
       - ${port1}:5984
+    volumes:
+      - couchdb${COUCH_ID}.${CORG}:/opt/couchdb/data
     hostname: couchdb${COUCH_ID}.${CORG}
     networks:
       ${EXTERNAL_NETWORK}:
