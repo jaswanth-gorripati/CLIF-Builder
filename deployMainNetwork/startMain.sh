@@ -163,8 +163,8 @@ A_C_ID=$(docker ps |grep ${ad_org}_cli|awk '{print $1}')
     exit 1
 fi
 d_pth=/opt/gopath/src/github.com/hyperledger/fabric/peer/
-docker cp $M_C_ID:$d_pth/${sin_org}_update_in_envelope.pb ./${sin_org}_update_in_envelope.pb
-docker cp ./${sin_org}_update_in_envelope.pb $A_C_ID:$d_pth 2>&1
+docker cp $M_C_ID:$d_pth/${sin_org}_update_in_envelope.pb ~/HANB/${m_org}/${sin_org}_update_in_envelope.pb
+docker cp ~/HANB/${m_org}/${sin_org}_update_in_envelope.pb $A_C_ID:$d_pth 2>&1
     if [ $? -ne 0 ]; then
         echo "ERROR !!!! failed"
         exit 1
