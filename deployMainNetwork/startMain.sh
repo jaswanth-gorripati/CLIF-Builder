@@ -21,11 +21,30 @@ function startSwarmNetwork() {
     cd $Cr_D
 
 }
+
+function startComposeNetwork () {
+    Cr_D=$PWD
+    EXT_NW=$2
+    cd $1
+    chmod +x ./dockerSetup.sh 
+    chmod +x ./buildingNetwork.sh
+    ./dockerSetup.sh "deployCompose" ${EXT_NW}
+    #sendTokenToOrgs
+    cd $Cr_D
+}
 function startService() {
     Cr_D=$PWD
     cd $org_pth
     chmod +x ./dockerSetup.sh 
     ./dockerSetup.sh "deployServices" ${D_STK}
+    cd $Cr_D
+}
+function startCompose() {
+    Cr_D=$PWD
+    cd $org_pth
+    chmod +x ./dockerSetup.sh 
+    export COMPOSE_PROJECT_NAME=hanb
+    ./dockerSetup.sh "deployCompose" $EXT_NW
     cd $Cr_D
 }
 function deployNetwork() {
@@ -41,17 +60,24 @@ function deployNetwork() {
     fi
 }
 function runMainNetwork() {
+    echo $@
     org_pth=$1
     EXT_NW=$2
-    D_STK=$3
-    CH_NME=$4
-    D_NME=$5
+    D_STK=$9
+    CH_NME=$3
+    D_NME=$4
     CC_S_P=github.com/chaincode/chaincode_example02/go/
-    CC_VER=$6
-    ORD_adr=$7
-    P_CT=$8
+    CC_VER=$5
+    ORD_adr=$6
+    P_CT=$7
+    n_tpe=$8
     #startSwarmNetwork
-    startService
+    echo ${n_tpe}
+    if [ "${n_tpe}" == "Docker-compose" ]; then
+        echo "Starting Compose Network "
+        else
+        startService
+    fi
     deployNetwork
 }
 function sendOrderer() {
@@ -80,21 +106,26 @@ function addNewOrg() {
 }
 
 function AddOrgToNetwork() {
+    echo $@
     ad_Org=$1
     CH_NME=$2
     O_TPE=$3
-    DS_NAME=$4
-    CC_NAME=$5
-    CC_VER=$6
+    CC_NAME=$4
+    CC_VER=$5
+    N_TYPE=$6
+    EXT_NW=$7
+    DS_NAME=$9
     if [ "${O_TPE}" == "KAFKA" ]; then
         OR_AD="orderer0"
     else
         OR_AD="orderer0"
     fi
-    AP_CN=$7
+    AP_CN=$8
     c_path=$PWD
     cd ~/HANB/${ad_Org}/
-    ./dockerSetup.sh "buildNetwork" ${DS_NAME} ${ad_Org} ${CH_NME} ${CC_NAME} ${CC_VER} ${OR_AD} "github.com/chaincode/chaincode_example02/go/" $AP_CN
+    echo ""buildNetwork" ${DS_NAME} ${ad_Org} ${CH_NME} ${CC_NAME} ${CC_VER} ${OR_AD} "github.com/chaincode/chaincode_example02/go/" $AP_CN $N_TYPE $EXT_NW"
+    export COMPOSE_PROJECT_NAME=hanb
+    ./dockerSetup.sh "buildNetwork" $EXT_NW ${ad_Org} ${CH_NME} ${CC_NAME} ${CC_VER} ${OR_AD} "github.com/chaincode/chaincode_example02/go/" $AP_CN $N_TYPE ${DS_NAME}
     cd $c_path
 }
 function updateChannelConfig() {

@@ -138,19 +138,26 @@ function swarmJoin() {
 
 function buildNetwork() {
   echo -e "${GREEN}Deploying  below services into the network${NC}${BROWN}"
-  docker stack deploy ${DOCKER_STACK_NAME} -c docker-compose.yaml 2>&1
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}ERROR !!!! Unable to start network${NC}"
-    CLI_CONTAINER=$(docker ps |grep ${C_ORG}_cli|awk '{print $1}')
-    echo -e "${RED} ERROR LOGS from CLI:"
-    docker logs -f ${CLI_CONTAINER}
-    echo -e "${NC}"
-    exit 1
+  if [ "${n_type}" == "Docker-compose" ]; then
+    deployComposeNetwork
+  else
+    docker stack deploy ${DOCKER_STACK_NAME} -c docker-compose.yaml 2>&1
+    if [ $? -ne 0 ]; then
+      echo -e "${RED}ERROR !!!! Unable to start network${NC}"
+      CLI_CONTAINER=$(docker ps |grep ${C_ORG}_cli|awk '{print $1}')
+      echo -e "${RED} ERROR LOGS from CLI:"
+      docker logs -f ${CLI_CONTAINER}
+      echo -e "${NC}"
+      exit 1
+    fi
   fi
   echo -e "${NC}"
   sleep 90
   CLI_CONTAINER=$(docker ps |grep ${C_ORG}_cli|awk '{print $1}')
   docker exec $CLI_CONTAINER ./joinNetwork.sh $C_ORG $CH_NAME $CC_NAME $CC_VER $OR_AD $CC_PTH $P_CNT
+}
+function deployComposeNetwork() {
+  docker-compose -f docker-compose.yaml up -d
 }
 
 if [ "$1" == "swarmCreate" ]; then 
@@ -164,7 +171,8 @@ elif [ "$1" == "removeSwarm" ]; then
   removeUnwantedImages
 elif [ "$1" == "buildNetwork" ]; then
   #joinSwarm $2
-  DOCKER_STACK_NAME=$2
+  echo $@
+  DOCKER_STACK_NAME=${11}
   C_ORG=$3
   CH_NAME=$4
   CC_NAME=$5
@@ -172,5 +180,19 @@ elif [ "$1" == "buildNetwork" ]; then
   OR_AD=$7
   CC_PTH=$8
   P_CNT=$(expr $9 - 1)
+  n_type=${10}
+  EXT_NTWRK=${2}
   buildNetwork
+# elif [ "$1" == "deployCompose" ]; then
+#   C_ORG=$2
+#   CH_NAME=$3
+#   CC_NAME=$4
+#   CC_VER=$5
+#   OR_AD=$6
+#   CC_PTH=$7
+#   P_CNT=$(expr $8 - 1)
+#   n_type=${9}
+#   EXT_NTWRK=${10}
+#   deployComposeNetwork
+#   sleep 30
 fi

@@ -4,9 +4,10 @@ DTSPATH="./services.yaml"
 function addCli() {
     PORG_NAME=$1
     EXTERNAL_NETWORK=$2
+    d_type="$3"
+if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   ${PORG_NAME}_cli:
-    hostname: ${PORG_NAME}_cli
     image: hyperledger/fabric-tools:x86_64-1.1.0
     deploy:
       replicas: 1
@@ -16,6 +17,16 @@ cat << EOF >> ${DTSPATH}
           memory: 50M
       restart_policy:
         condition: on-failure
+    hostname: ${PORG_NAME}_cli
+EOF
+else
+cat << EOF >> ${DTSPATH}
+  ${PORG_NAME}_cli:
+    image: hyperledger/fabric-tools:x86_64-1.1.0
+    container_name: ${PORG_NAME}_cli
+EOF
+fi
+cat << EOF >> ${DTSPATH}
     tty: true
     stdin_open: true
     environment:

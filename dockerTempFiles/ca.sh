@@ -5,6 +5,8 @@ function addCa() {
     AddNumber=$2
     port1=$(expr 7054 + $2)
     EXTERNAL_NETWORK=$3
+    d_type="$4"
+if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   ca_${PORG_NAME}:
     image: hyperledger/fabric-ca:x86_64-1.1.0
@@ -12,6 +14,16 @@ cat << EOF >> ${DTSPATH}
       replicas: 1
       restart_policy:
         condition: on-failure
+    hostname: ca-${PORG_NAME}
+EOF
+else
+cat << EOF >> ${DTSPATH}
+  ca.${PORG_NAME}:
+    image: hyperledger/fabric-ca:x86_64-1.1.0
+    container_name: ca-${PORG_NAME}
+EOF
+fi
+cat << EOF >> ${DTSPATH}
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_CA_NAME=ca-${PORG_NAME}
@@ -24,7 +36,6 @@ cat << EOF >> ${DTSPATH}
     volumes:
       - ./crypto-config/peerOrganizations/${PORG_NAME}.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
       #- ./ledger/ca-${PORG_NAME}:/etc/hyperledger/fabric-ca-server
-    hostname: ca-${PORG_NAME}
     networks:
       ${EXTERNAL_NETWORK}:
         aliases:

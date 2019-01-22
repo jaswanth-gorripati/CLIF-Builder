@@ -84,50 +84,50 @@ function addDockerFile() {
             #echo "$(expr $D_ZOO_COUNT - 1)""
             for zoo_cnt in `seq 0 $D_ZOO_COUNT`
             do
-                addZookeeper $zoo_cnt $EX_NTW "${ZOO_STRING}"
+                addZookeeper $zoo_cnt $EX_NTW "${ZOO_STRING}" ${SELECTED_NETWORK_TYP}
             done
             KF_ZOO_STR=${KF_ZOO_STR::-1}
 
             for kf_cnt in `seq 0 $D_KF_COUNT`
             do
                 KF_STRING="${KF_STRING}kafka${kf_cnt}:9092,"
-                addKafka $kf_cnt $MNUMBER $EX_NTW $KF_ZOO_STR $D_ZOO_COUNT
+                addKafka $kf_cnt $MNUMBER $EX_NTW $KF_ZOO_STR $D_ZOO_COUNT ${SELECTED_NETWORK_TYP}
             done
             KF_STRING=${KF_STRING::-1}
             KF_STRING="${KF_STRING}]"
             for Ocnt in `seq 0 $(expr $D_ORDERER_COUNT - 1)`
             do
-                addOrderer $Ocnt $MNUMBER $EX_NTW $D_ORDERER_PN $KF_STRING $D_KF_COUNT
+                addOrderer $Ocnt $MNUMBER $EX_NTW $D_ORDERER_PN $KF_STRING $D_KF_COUNT ${SELECTED_NETWORK_TYP}
                 MNUMBER=$(expr $MNUMBER + 1000)
             done
         else
             for Ocnt in `seq 0 $(expr $D_ORDERER_COUNT - 1)`
             do
-                addOrderer $Ocnt $MNUMBER $EX_NTW $D_ORDERER_PN
+                addOrderer $Ocnt $MNUMBER $EX_NTW $D_ORDERER_PN " " ${SELECTED_NETWORK_TYP}
                 MNUMBER=$(expr $MNUMBER + 1000)
             done
         fi
     fi
-    addCa $DORG_NAME $caMNUMBER $EX_NTW
+    addCa $DORG_NAME $caMNUMBER $EX_NTW ${SELECTED_NETWORK_TYP}
 
     D_IS_COUCH=$7
     if [ $D_IS_COUCH == true ];then 
         addCouchVolumes $DPEER_COUNT $DORG_NAME
         for pcnt in `seq 0 $(expr $DPEER_COUNT - 1)`
         do  
-            addCouch $pcnt $pport $EX_NTW $DORG_NAME
-            addPeer $DORG_NAME $pcnt $pport $EX_NTW true
+            addCouch $pcnt $pport $EX_NTW $DORG_NAME ${SELECTED_NETWORK_TYP}
+            addPeer $DORG_NAME $pcnt $pport $EX_NTW true ${SELECTED_NETWORK_TYP}
             pport=$(expr $pport + 1000)
         done
     else
         for pcnt in `seq 0 $(expr $DPEER_COUNT - 1)`
         do  
-            addPeer $DORG_NAME $pcnt $pport $EX_NTW false
+            addPeer $DORG_NAME $pcnt $pport $EX_NTW false ${SELECTED_NETWORK_TYP}
             pport=$(expr $pport + 1000)
         done
     fi
-    addCli $DORG_NAME $EX_NTW
-    addNetwork $EX_NTW
+    addCli $DORG_NAME $EX_NTW ${SELECTED_NETWORK_TYP}
+    addNetwork $EX_NTW ${SELECTED_NETWORK_TYP}
     createTempFile
 }
 
@@ -180,6 +180,10 @@ fi
 DPath="${CPWD}/${DORG_NAME}/generateCrypto.sh"
 cat << EOF > ${DPath}
 ${networkFile}
+EOF
+DPath="${CPWD}/${DORG_NAME}/.env"
+cat << EOF > ${DPath}
+COMPOSE_PROJECT_NAME=hanb
 EOF
 chmod +x ${CPWD}/${DORG_NAME}/*.sh
 }
