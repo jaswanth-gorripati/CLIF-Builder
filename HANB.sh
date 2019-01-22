@@ -25,6 +25,7 @@
 . ./dockerTempFiles/zookeeper.sh
 . ./dockerTempFiles/network.sh
 . ./deployMainNetwork/startMain.sh
+. ./endNote.sh
 C_P=$PWD
 
 
@@ -323,7 +324,10 @@ function generateDockerFiles() {
   done
 
 echo -e "${BROWN}"
-echo -e "************ ${GREEN} NETWORK SETUP IS DONE ... THANK YOU FOR USING ${LBLUE} HANB ${GREEN}************${NC}"
+echo -e "************ ${GREEN} NETWORK SETUP IS DONE ... THANK YOU FOR USING ************${NC}"
+echo " "
+echo " "
+PrintEnd
 }
 
 function readSSHofOrgs() {
