@@ -5,10 +5,21 @@ function addZookeeper() {
     ZOO_ID=$1
     EXTERNAL_NETWORK=$2
     zoo_str=$3
+    d_type="$4"
     cat << EOF >> ${DTSPATH}
   zookeeper${ZOO_ID}:
     image: hyperledger/fabric-zookeeper:x86_64-0.4.6
+EOF
+if [ "$d_type" != "Docker-compose" ]; then
+cat << EOF >> ${DTSPATH}
     hostname: zookeeper${ZOO_ID}
+EOF
+else
+cat << EOF >> ${DTSPATH}
+    container_name: zookeeper${ZOO_ID}
+EOF
+fi
+cat << EOF >> ${DTSPATH}
     environment:
       - ZOO_MY_ID=$(expr ${ZOO_ID} + 1)
       - ZOO_SERVERS=${zoo_str}

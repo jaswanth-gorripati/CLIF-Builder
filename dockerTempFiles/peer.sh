@@ -8,20 +8,41 @@ function addPeer() {
     port2=$(expr 7053 + $3)
     EXTERNAL_NETWORK=$4
     couchdb=$5
+    d_type="$6"
+if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   peer${P_ID}_${PORG_NAME}:
-    hostname: peer${P_ID}.${PORG_NAME}.example.com
     image: hyperledger/fabric-peer:x86_64-1.1.0
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
+    hostname: peer${P_ID}.${PORG_NAME}.example.com
+EOF
+else
+cat << EOF >> ${DTSPATH}
+  peer${P_ID}.${PORG_NAME}.example.com:
+    image: hyperledger/fabric-peer:x86_64-1.1.0
+    container_name: peer${P_ID}.${PORG_NAME}.example.com
+EOF
+fi
+cat << EOF >> ${DTSPATH}
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       # the following setting starts chaincode containers on the same
       # bridge network as the peers
       # https://docs.docker.com/compose/networking/
+EOF
+if [ "$d_type" != "Docker-compose" ]; then
+cat << EOF >> ${DTSPATH}
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${EXTERNAL_NETWORK}
+EOF
+else
+cat << EOF >> ${DTSPATH}
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hanb_${EXTERNAL_NETWORK}
+EOF
+fi
+cat << EOF >> ${DTSPATH}
       #- CORE_LOGGING_LEVEL=INFO
       - CORE_LOGGING_LEVEL=DEBUG
       - CORE_CHAINCODE_STARTUPTIMEOUT=1200s
@@ -64,6 +85,7 @@ cat << EOF >> ${DTSPATH}
     depends_on:
       - couchdb${P_ID}.${PORG_NAME}
 EOF
+fi
 cat << EOF >> ${DTSPATH}
     networks:
       ${EXTERNAL_NETWORK}:
@@ -71,6 +93,5 @@ cat << EOF >> ${DTSPATH}
           - peer${P_ID}.${PORG_NAME}.example.com
 
 EOF
-fi
 }
 #addPeer org1 2 2000 ext true

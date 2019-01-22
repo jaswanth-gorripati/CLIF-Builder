@@ -8,19 +8,34 @@ function addOrderer() {
     OR_P_NAME=$4
     KF_STR=$5
     KFS_Count=$6
-    cat << EOF >> ${DTSPATH}
+    if [ "${KF_STR}" != " " ]; then
+      d_type="$7"
+      else
+      d_type="$6"
+    fi
+if [ "$d_type" != "Docker-compose" ]; then
+cat << EOF >> ${DTSPATH}
   orderer${ORDR_ID}:
-    hostname: orderer${ORDR_ID}.example.com
     image: hyperledger/fabric-orderer:x86_64-1.1.0
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
+    hostname: orderer${ORDR_ID}.example.com
+EOF
+else
+cat << EOF >> ${DTSPATH}
+  orderer${ORDR_ID}.example.com:
+    image: hyperledger/fabric-orderer:x86_64-1.1.0
+    container_name: orderer${ORDR_ID}.example.com
+EOF
+fi
+cat << EOF >> ${DTSPATH}
     environment:
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${EXTERNAL_NETWORK}
       - ORDERER_HOST=orderer${ORDR_ID}.example.com
 EOF
-if [ "${KF_STR}" != "" ]; then
+if [ "${KF_STR}" != " " ]; then
 cat << EOF >> ${DTSPATH}
       - CONFIGTX_ORDERER_ORDERERTYPE=kafka
       - CONFIGTX_ORDERER_KAFKA_BROKERS=${KF_STR}
@@ -71,7 +86,7 @@ cat << EOF >> ${DTSPATH}
       - ${port1}:7050
 EOF
 
-if [ "${KFS_Count}" != "" ];then
+if [ "${KF_STR}" != " " ];then
 cat << EOF >> ${DTSPATH}
     depends_on:
 EOF

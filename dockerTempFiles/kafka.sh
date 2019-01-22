@@ -7,11 +7,22 @@ function addKafka() {
     EXTERNAL_NETWORK=$3
     zoo_str=$4
     Zoo_count=$5
+    d_type="$6"
     K_ID=$(expr $KF_ID + 1)
-    cat << EOF >> ${DTSPATH}
+if [ "$d_type" != "Docker-compose" ]; then
+cat << EOF >> ${DTSPATH}
   kafka${KF_ID}:
     image: hyperledger/fabric-kafka:x86_64-0.4.6
     hostname: kafka${KF_ID}
+EOF
+else
+cat << EOF >> ${DTSPATH}
+  kafka${KF_ID}:
+    image: hyperledger/fabric-kafka:x86_64-0.4.6
+    container_name: kafka${KF_ID}
+EOF
+fi
+cat << EOF >> ${DTSPATH}
     environment:
       - KAFKA_LOG_RETENTION_MS=-1
       - KAFKA_MESSAGE_MAX_BYTES=1000012

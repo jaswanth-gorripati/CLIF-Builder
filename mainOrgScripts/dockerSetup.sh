@@ -7,10 +7,6 @@ LBLUE='\033[1;34m'
 NC='\033[0m'
 GREEN='\033[0;32m'
 
-set -o allexport
-source ./env
-set +o allexport
-
 I_PATH=$PWD
 DOCKER_STACK_NAME=""
 EXT_NTWRK=""
@@ -121,10 +117,18 @@ function sendToken() {
   done
   # cd $C_PD
 }
+function deployComposeNetwork() {
+  docker-compose -f ./docker-compose.yaml up -d
+  sleep 2 
+  return
+}
 function deployServices() {
-  echo -e "${GREEN}Deploying  below services into the network${NC}${BROWN}"
+  echo -e "${GREEN}Deploying  below services into the network${NC}${BROWN}${NC}"
+  if [ "${n_type}" == "Docker-compose" ]; then
+    return
+  else
   docker stack deploy ${DOCKER_STACK_NAME} -c docker-compose.yaml 2>&1
-  echo -e "${NC}"
+  fi
   if [ $? -ne 0 ]; then
     echo -e "${RED}ERROR !!!! Unable to start network${NC}"
     CLI_CONTAINER=$(docker ps |grep tools|awk '{print $1}')
@@ -155,4 +159,8 @@ elif [ "$1" == "deployServices" ]; then
 elif [ "$1" == "sendJoinToken" ]; then
   ar=$@
   sendToken ${ar[@]}
+elif [ "$1" == "deployCompose" ]; then
+  EXT_NTWRK=$2
+  deployComposeNetwork
+  sleep 30
 fi
