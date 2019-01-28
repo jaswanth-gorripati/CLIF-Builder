@@ -60,7 +60,8 @@ function generateChannelArtifacts() {
   fi
 
   CONFIGTX_FILE="configtx.yaml"
-
+  H_P=$(echo ~)
+  sed $OPTS "s:HOME_PATH:$H_P:g" "$CONFIGTX_FILE"
   echo -e "${GREEN}"
   echo "##########################################################"
   echo "#########  Generating  ${O_NAME}.json file ##############"
@@ -74,7 +75,7 @@ function generateChannelArtifacts() {
     exit 1
   fi
   echo -e "${BROWN} CRYPTO FILES GENERATED FOR ${O_NAME}${NC}"
-  sendJsonFile
+  #sendJsonFile
 }
 
 function replacePrivateKey() {

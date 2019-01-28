@@ -78,7 +78,7 @@ cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
         # ID to load the MSP definition as
         ID: ${ORG_NAME1}MSP
 
-        MSPDir:  $CPWD/${ORG_NAME1}/crypto-config/peerOrganizations/${ORG_NAME1}.example.com/msp
+        MSPDir:  HOME_PATH/HANB/${ORG_NAME1}/crypto-config/peerOrganizations/${ORG_NAME1}.example.com/msp
 
         AnchorPeers:
             # AnchorPeers defines the location of peers which can be used

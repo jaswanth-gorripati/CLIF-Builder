@@ -25,6 +25,7 @@
 . ./dockerTempFiles/zookeeper.sh
 . ./dockerTempFiles/network.sh
 . ./deployMainNetwork/startMain.sh
+. ./endNote.sh
 C_P=$PWD
 
 
@@ -279,11 +280,24 @@ function generateDockerFiles() {
     TNP=$(expr $TNP + ${orgDetails[$DP_CNT,1]})
     PPORT=${TNP}000
     MOPath="${CPWD}/${orgDetails[${DP_CNT},0]}/"
-    cd $MOPath
-    #source ./${MOPath}
-    chmod +x generateCrypto.sh
-    ./generateCrypto.sh "./" ${orgDetails[${DP_CNT},0]} ${orgDetails[0,0]}
-    cd $C_P
+    if [ "$SELECTED_NETWORK_TYPE" != "Docker-swarm-m" ]; then
+      cd $MOPath
+      #source ./${MOPath}
+      chmod +x generateCrypto.sh
+      ./generateCrypto.sh "./" ${orgDetails[${DP_CNT},0]} ${orgDetails[0,0]}
+      cd $C_P
+    else
+      MOPath="${orgDetails[${DP_CNT},0]}"
+      echo -e "Sending Crypto Materials to ${orgDetails[${DP_CNT},0]} organisation which is at ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]}"
+      ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} rm -rf ./HANB/* 
+      ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} mkdir -p HANB/$MOPath 
+      scp -r ${CPWD}/$MOPath/* ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]}:./HANB/$MOPath/
+      ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} chmod +x ./HANB/$MOPath/*
+      ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} /bin/bash << EOF
+cd ./HANB/$MOPath/;
+./generateCrypto.sh "./" ${orgDetails[${DP_CNT},0]} ${orgDetails[0,0]}
+EOF
+    fi
   done
   echo -e "${BROWN} Docker Files are generated ....${NC}"
   MOPath="${CPWD}/${orgDetails[0,0]}/"
@@ -296,7 +310,7 @@ function generateDockerFiles() {
   if [ "$SELECTED_NETWORK_TYPE" == "Docker-compose" ]; then
     startComposeNetwork "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME
     else
-    startSwarmNetwork "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME ${T_ORGS[@]} 
+    startSwarmNetwork "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME ${T_ORGS[@]}
   fi
   echo $PWD
   runMainNetwork "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME ${CHANNELS[0,0]} ${orgDetails[0,0]} $CC_VRSN $ORDR_PRFRD ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE $STACK_NAME
@@ -304,9 +318,13 @@ function generateDockerFiles() {
   for og in `seq 1 $ad_cnt`
   do
     echo "$og"
-    addNewOrg ${T_ORGS[0]} ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE ${orgDetails[0,1]}
+    if [ "$SELECTED_NETWORK_TYPE" == "Docker-compose" ]; then
+      addNewOrg ${T_ORGS[0]} ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE ${orgDetails[0,1]}
+    else
+      addNewOrg ${T_ORGS[0]} ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE ${ORGS_SSH[${orgDetails[$og,0]}]}
+    fi
     if [ "$og" == "1" ]; then
-      updateChannelConfig ${T_ORGS[0]} ${T_ORGS[$og]} ${CHANNELS[0,0]}
+      updateChannelConfig ${T_ORGS[0]} ${T_ORGS[$og]} ${CHANNELS[0,0]} $SELECTED_NETWORK_TYPE ""
     else
       t_og=$(expr $og - 1)
       tmp=1
@@ -314,35 +332,50 @@ function generateDockerFiles() {
       do
         m_scn=$(expr $scn - 1)
         echo -e "${BROWN} Sending Update file to ${T_ORGS[$scn]} for signing"
-        signChannelConfig ${T_ORGS[$m_scn]} ${T_ORGS[$scn]} ${CHANNELS[0,0]} ${T_ORGS[$og]} ${orgDetails[$scn,1]}
+        if [ "${SELECTED_NETWORK_TYPE}" != "Docker-swarm-m" ]; then
+          ORGS_SSH[${orgDetails[$scn,0]}]=""
+        fi
+        signChannelConfig ${T_ORGS[$m_scn]} ${T_ORGS[$scn]} ${CHANNELS[0,0]} ${T_ORGS[$og]} ${orgDetails[$scn,1]} $SELECTED_NETWORK_TYPE ${orgDetails[0,0]} ${ORGS_SSH[${orgDetails[$scn,0]}]}
         tmp=$scn
       done
-      updateChannelConfig ${T_ORGS[$tmp]} ${T_ORGS[$og]} ${CHANNELS[0,0]}
+      updateChannelConfig ${T_ORGS[$tmp]} ${T_ORGS[$og]} ${CHANNELS[0,0]} $SELECTED_NETWORK_TYPE ${ORGS_SSH[${orgDetails[$tmp,0]}]}
     fi
-    AddOrgToNetwork ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE "mycc" $CC_VRSN $SELECTED_NETWORK_TYPE $EXT_NTW_NAME ${orgDetails[$og,1]} $STACK_NAME 
+    AddOrgToNetwork ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE "mycc" $CC_VRSN $SELECTED_NETWORK_TYPE $EXT_NTW_NAME ${orgDetails[$og,1]} $STACK_NAME ${ORGS_SSH[${orgDetails[$og,0]}]} ${orgDetails[0,0]}
   done
-
+PLC="("
+for PLC_CNT in `seq 0 $max`
+do
+  PLC="${PLC}'${T_ORGS[$PLC_CNT]}MSP.member',"
+done
+PLC=${PLC::-1}
+PLC="${PLC})"
+instantiateChainIntoChannel ${CHANNELS[0,0]} ${T_ORGS[0]} $CC_VRSN ${orgDetails[0,1]} ${PLC}
 echo -e "${BROWN}"
-echo -e "************ ${GREEN} NETWORK SETUP IS DONE ... THANK YOU FOR USING ${LBLUE} HANB ${GREEN}************${NC}"
+echo -e "************ ${GREEN} NETWORK SETUP IS DONE ... THANK YOU FOR USING ************${NC}"
+echo " "
+echo " "
+PrintEnd
 }
 
 function readSSHofOrgs() {
-  for so_cnt in `seq 0 $1`
+  for so_cnt in `seq 1 $1`
   do
-    readSSH
+    readSSH $so_cnt
   done
 }
 
 function readSSH() {
   echo -e "${BLUE}"
-    read -p "   Enter SSH address of  ${orgDetails[${$1},0]} organisation: " ORGS_SSH[${orgDetails[${$1},0]}]    
+    O_cnt=$1
+    read -p "   Enter SSH address of  ${orgDetails[$O_cnt,0]} organisation: " ORGS_SSH[${orgDetails[$O_cnt,0]}]    
     echo -e "${NC}"
   if [ -z "$EXT_NTW_NAME" ]; then
       echo -e "${RED}!!! Please enter a valid SSH address${NC}"
       readSSH
       return;
   fi
-  checkSSH $1 ${ORGS_SSH[${orgDetails[${$1},0]}]}
+  checkSSH $1 ${ORGS_SSH[${orgDetails[$O_cnt,0]}]}
+  echo $ORGS_SSH
 }
 function checkSSH() {
     status=$(ssh -o BatchMode=yes -o ConnectTimeout=5 $2 echo ok 2>&1)
@@ -396,6 +429,9 @@ function readStackName() {
       return;
   fi
 }
+#
+## N E T W O R K   S E L E C T I O N
+#
 function networkSelection() {
   SELECTED_NETWORK_TYPE=$1
   echo -e "${LBLUE}Network selected $1 ${NC}"
@@ -405,6 +441,17 @@ function networkSelection() {
   else
     readNetworkName
     readStackName
+    if [ "$1" == "Docker-swarm-m" ]; then
+      echo ""
+      echo -e "${BROWN}Please make sure this machine is Authorized in all other Machines${NC}"
+      echo -e "${RED}NOTE: ${LBLUE}Copy the below string in .ssh/authorized_keys file${NC}"
+      echo -e "${GREEN}"
+      cat ~/.ssh/id_rsa.pub
+      echo -e "${NC}"
+      O_S_cnt=$( expr ${#orgDetails[@]} / 3)
+      CN_s_O=$(expr $O_S_cnt - 1)
+      readSSHofOrgs $CN_s_O
+    fi
     echo -e "${BROWN}Generating Required network files${NC}"
   fi
   generateDockerFiles

@@ -35,7 +35,8 @@ function generateChannelArtifacts() {
   fi
 
   CONFIGTX_FILE="configtx.yaml"
-
+  H_P=$(echo ~)
+  sed $OPTS "s:HOME_PATH:$H_P:g" "$CONFIGTX_FILE"
   echo -e "${GREEN}"
   echo "##########################################################"
   echo "#########  Generating Orderer Genesis block ##############"

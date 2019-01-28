@@ -5,13 +5,15 @@ BLUE='\033[0;34m'
 LBLUE='\033[1;34m'
 NC='\033[0m'
 GREEN='\033[0;32m'
-
+echo $@
 CHANNEL_NAME="$1"
 DOMAIN="$2"
 CC_SRC_PATH="$3"
 CC_VERSION="$4"
 ORDR_ADRS=orderer0
-P_CNT=$6
+P_CNT=$5
+IS_INSTANT=$6
+POL="${7}"
 DELAY="3"
 TIMEOUT="10"
 LANGUAGE="golang"
@@ -21,12 +23,6 @@ INS_RETRY=3
 CCR=1
 ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/${ORDR_ADRS}.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
 echo -e "${GREEN}"
-echo " ____    _____      _      ____    _____ "
-echo "/ ___|  |_   _|    / \    |  _ \  |_   _|"
-echo "\___ \    | |     / _ \   | |_) |   | |  "
-echo " ___) |   | |    / ___ \  |  _ <    | |  "
-echo "|____/    |_|   /_/   \_\ |_| \_\   |_|  "
-echo
 echo "Building Initial channel and adding An Organisation"
 echo -e "${NC}"
 
@@ -142,7 +138,7 @@ installChaincodeWithRetry () {
 instantiatedWithRetry () {
     setGlobals $1 
     set -x
-    peer chaincode instantiate -o $ORDR_ADRS.example.com:7050 --tls --cafile $ORDERER_CA -C $CHANNEL_NAME -n mycc -v ${CC_VERSION} -c '{"Args":["init","a", "100", "b","200"]}'
+    peer chaincode instantiate -o $ORDR_ADRS.example.com:7050 --tls --cafile $ORDERER_CA -C $CHANNEL_NAME -n mycc -v ${CC_VERSION} -c '{"Args":["init","a", "100", "b","200"]}' -P "OR ${POL}"
     res=$?
     set +x
     cat log.txt
@@ -193,6 +189,22 @@ chainQuery () {
     fi
 }
 
+echo "IS_INSTANT= ${IS_INSTANT}"
+if [ $IS_INSTANT == true ]; then
+    #Instantiation 
+    echo -e "${GREEN}"
+    echo "========== Instantiation on ${CHANNEL_NAME} STARTED ========="
+    echo -e "${NC}"
+    sleep 5
+    instantiatedWithRetry 0
+    sleep 20
+    #
+    # Query 
+    echo -e "${GREEN}"
+    echo "========== Attempting to Query peer0.${DOMAIN}.exapmle.com ...$(($(date +%s)-starttime)) secs =========="
+    echo -e "${NC}"
+    chainQuery
+else
 # Channel creation 
 echo -e "${GREEN}"
 echo "========== Channel ${CHANNEL_NAME} creation started =========="
@@ -239,18 +251,4 @@ do
     echo
     peer=$(expr $peer + 1)
 done
-#sleep 10
-#
-# Instantiation 
-echo -e "${GREEN}"
-echo "========== Instantiation on ${CHANNEL_NAME} STARTED ========="
-echo -e "${NC}"
-sleep 5
-instantiatedWithRetry 0
-sleep 20
-#
-# Query 
-echo -e "${GREEN}"
-echo "========== Attempting to Query peer0.${DOMAIN}.exapmle.com ...$(($(date +%s)-starttime)) secs =========="
-echo -e "${NC}"
-chainQuery
+fi
