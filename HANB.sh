@@ -342,7 +342,7 @@ EOF
     fi
     AddOrgToNetwork ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE "mycc" $CC_VRSN $SELECTED_NETWORK_TYPE $EXT_NTW_NAME ${orgDetails[$og,1]} $STACK_NAME ${ORGS_SSH[${orgDetails[$og,0]}]} ${orgDetails[0,0]}
   done
-PLC="OR ("
+PLC="("
 for PLC_CNT in `seq 0 $max`
 do
   PLC="${PLC}'${T_ORGS[$PLC_CNT]}MSP.member',"

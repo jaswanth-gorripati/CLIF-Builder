@@ -138,7 +138,7 @@ installChaincodeWithRetry () {
 instantiatedWithRetry () {
     setGlobals $1 
     set -x
-    peer chaincode instantiate -o $ORDR_ADRS.example.com:7050 --tls --cafile $ORDERER_CA -C $CHANNEL_NAME -n mycc -v ${CC_VERSION} -c '{"Args":["init","a", "100", "b","200"]}' -P "${POL}"
+    peer chaincode instantiate -o $ORDR_ADRS.example.com:7050 --tls --cafile $ORDERER_CA -C $CHANNEL_NAME -n mycc -v ${CC_VERSION} -c '{"Args":["init","a", "100", "b","200"]}' -P "OR ${POL}"
     res=$?
     set +x
     cat log.txt

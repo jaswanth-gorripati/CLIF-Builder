@@ -65,14 +65,14 @@ function instantiateChainIntoChannel() {
     CC_S_P=github.com/chaincode/chaincode_example02/go/
     CC_VER=$3
     P_CT=$4
-    POLICY=${5}
+    POLICY=$5
     # -P "OR ('Org1MSP.peer','Org2MSP.peer')"
     CLI_CONTAINER=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
     if [ "${CLI_CONTAINER}" == "" ]; then
     echo -e "${RED}CONTAINER NOT found !!! ${NC}"
     exit 1
     fi
-    docker exec ${CLI_CONTAINER} ./buildingNetwork.sh $CH_NME $D_NME $CC_S_P $CC_VER $P_CT true "${POLICY}"
+    docker exec ${CLI_CONTAINER} ./buildingNetwork.sh $CH_NME $D_NME $CC_S_P $CC_VER $P_CT true "$POLICY"
     if [ $? -ne 0 ]; then
         echo "ERROR !!!! failed"
         exit 1
