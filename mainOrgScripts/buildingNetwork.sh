@@ -5,13 +5,15 @@ BLUE='\033[0;34m'
 LBLUE='\033[1;34m'
 NC='\033[0m'
 GREEN='\033[0;32m'
-
+echo $@
 CHANNEL_NAME="$1"
 DOMAIN="$2"
 CC_SRC_PATH="$3"
 CC_VERSION="$4"
 ORDR_ADRS=orderer0
-P_CNT=$6
+P_CNT=$5
+IS_INSTANT=$6
+POL="${7}"
 DELAY="3"
 TIMEOUT="10"
 LANGUAGE="golang"
@@ -136,7 +138,7 @@ installChaincodeWithRetry () {
 instantiatedWithRetry () {
     setGlobals $1 
     set -x
-    peer chaincode instantiate -o $ORDR_ADRS.example.com:7050 --tls --cafile $ORDERER_CA -C $CHANNEL_NAME -n mycc -v ${CC_VERSION} -c '{"Args":["init","a", "100", "b","200"]}'
+    peer chaincode instantiate -o $ORDR_ADRS.example.com:7050 --tls --cafile $ORDERER_CA -C $CHANNEL_NAME -n mycc -v ${CC_VERSION} -c '{"Args":["init","a", "100", "b","200"]}' -P "${POL}"
     res=$?
     set +x
     cat log.txt
@@ -187,6 +189,22 @@ chainQuery () {
     fi
 }
 
+echo "IS_INSTANT= ${IS_INSTANT}"
+if [ $IS_INSTANT == true ]; then
+    #Instantiation 
+    echo -e "${GREEN}"
+    echo "========== Instantiation on ${CHANNEL_NAME} STARTED ========="
+    echo -e "${NC}"
+    sleep 5
+    instantiatedWithRetry 0
+    sleep 20
+    #
+    # Query 
+    echo -e "${GREEN}"
+    echo "========== Attempting to Query peer0.${DOMAIN}.exapmle.com ...$(($(date +%s)-starttime)) secs =========="
+    echo -e "${NC}"
+    chainQuery
+else
 # Channel creation 
 echo -e "${GREEN}"
 echo "========== Channel ${CHANNEL_NAME} creation started =========="
@@ -233,18 +251,4 @@ do
     echo
     peer=$(expr $peer + 1)
 done
-#sleep 10
-#
-# Instantiation 
-echo -e "${GREEN}"
-echo "========== Instantiation on ${CHANNEL_NAME} STARTED ========="
-echo -e "${NC}"
-sleep 5
-instantiatedWithRetry 0
-sleep 20
-#
-# Query 
-echo -e "${GREEN}"
-echo "========== Attempting to Query peer0.${DOMAIN}.exapmle.com ...$(($(date +%s)-starttime)) secs =========="
-echo -e "${NC}"
-chainQuery
+fi

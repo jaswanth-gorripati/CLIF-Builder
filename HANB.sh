@@ -310,7 +310,7 @@ EOF
   if [ "$SELECTED_NETWORK_TYPE" == "Docker-compose" ]; then
     startComposeNetwork "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME
     else
-    startSwarmNetwork "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME ${T_ORGS[@]} 
+    startSwarmNetwork "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME ${T_ORGS[@]}
   fi
   echo $PWD
   runMainNetwork "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME ${CHANNELS[0,0]} ${orgDetails[0,0]} $CC_VRSN $ORDR_PRFRD ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE $STACK_NAME
@@ -332,6 +332,9 @@ EOF
       do
         m_scn=$(expr $scn - 1)
         echo -e "${BROWN} Sending Update file to ${T_ORGS[$scn]} for signing"
+        if [ "${SELECTED_NETWORK_TYPE}" != "Docker-swarm-m" ]; then
+          ORGS_SSH[${orgDetails[$scn,0]}]=""
+        fi
         signChannelConfig ${T_ORGS[$m_scn]} ${T_ORGS[$scn]} ${CHANNELS[0,0]} ${T_ORGS[$og]} ${orgDetails[$scn,1]} $SELECTED_NETWORK_TYPE ${orgDetails[0,0]} ${ORGS_SSH[${orgDetails[$scn,0]}]}
         tmp=$scn
       done
@@ -339,7 +342,14 @@ EOF
     fi
     AddOrgToNetwork ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE "mycc" $CC_VRSN $SELECTED_NETWORK_TYPE $EXT_NTW_NAME ${orgDetails[$og,1]} $STACK_NAME ${ORGS_SSH[${orgDetails[$og,0]}]} ${orgDetails[0,0]}
   done
-
+PLC="OR ("
+for PLC_CNT in `seq 0 $max`
+do
+  PLC="${PLC}'${T_ORGS[$PLC_CNT]}MSP.member',"
+done
+PLC=${PLC::-1}
+PLC="${PLC})"
+instantiateChainIntoChannel ${CHANNELS[0,0]} ${T_ORGS[0]} $CC_VRSN ${orgDetails[0,1]} ${PLC}
 echo -e "${BROWN}"
 echo -e "************ ${GREEN} NETWORK SETUP IS DONE ... THANK YOU FOR USING ************${NC}"
 echo " "

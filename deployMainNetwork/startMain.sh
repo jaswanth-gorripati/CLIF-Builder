@@ -52,7 +52,27 @@ function deployNetwork() {
     echo -e "${RED}CONTAINER NOT found !!! ${NC}"
     exit 1
     fi
-    docker exec ${CLI_CONTAINER} ./buildingNetwork.sh $CH_NME $D_NME $CC_S_P $CC_VER $ORD_adr $P_CT
+    docker exec ${CLI_CONTAINER} ./buildingNetwork.sh $CH_NME $D_NME $CC_S_P $CC_VER $P_CT false
+    if [ $? -ne 0 ]; then
+        echo "ERROR !!!! failed"
+        exit 1
+    fi
+}
+function instantiateChainIntoChannel() {
+    echo $@
+    CH_NME=$1
+    D_NME=$2
+    CC_S_P=github.com/chaincode/chaincode_example02/go/
+    CC_VER=$3
+    P_CT=$4
+    POLICY=${5}
+    # -P "OR ('Org1MSP.peer','Org2MSP.peer')"
+    CLI_CONTAINER=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
+    if [ "${CLI_CONTAINER}" == "" ]; then
+    echo -e "${RED}CONTAINER NOT found !!! ${NC}"
+    exit 1
+    fi
+    docker exec ${CLI_CONTAINER} ./buildingNetwork.sh $CH_NME $D_NME $CC_S_P $CC_VER $P_CT true "${POLICY}"
     if [ $? -ne 0 ]; then
         echo "ERROR !!!! failed"
         exit 1
@@ -226,7 +246,7 @@ EOF
 chmod +x ./signChannelConfig.sh
 d_pth=/opt/gopath/src/github.com/hyperledger/fabric/peer/
 if [ "${DN_ORG_SSH}" != "" ]; then
-    scp ./signChannelConfig.sh $DN_ORG_SSH:./HANB/$m_org/
+    scp ./signChannelConfig.sh $DN_ORG_SSH:./HANB/$ad_org/
     rm ./signChannelConfig.sh
     scp ~/HANB/${ROOT_ORG}/${sin_org}_update_in_envelope.pb $DN_ORG_SSH:./HANB/${ad_org}/${sin_org}_update_in_envelope.pb
     ssh $DN_ORG_SSH /bin/bash << EOF
@@ -242,6 +262,8 @@ EOF
     scp $DN_ORG_SSH:./HANB/${ad_org}/${sin_org}_update_in_envelope.pb ~/HANB/${ROOT_ORG}/${sin_org}_update_in_envelope.pb
 else
 
+cp ./signChannelConfig.sh ~/HANB/$ad_org/
+rm ./signChannelConfig.sh
 M_C_ID=$(docker ps |grep ${m_org}_cli|awk '{print $1}')
  if [ "${M_C_ID}" == "" ]; then
     echo -e "${RED}CONTAINER NOT found !!! ${NC}"
