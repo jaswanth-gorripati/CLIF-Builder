@@ -66,27 +66,31 @@ readOrdererProfileName() {
 }
 
 readOrdererConsortium() {
-    OCons=("$@")
-    echo -e "${LBLUE}"
-    read -p "   Enter Consortium to be used in ORDERER : " OCNAME    
-    echo -e "${NC}"
-    if [ -z "$OCNAME" ]; then
-        echo -e "${RED}!!! Please enter a valid Name${NC}"
-        readOrdererConsortium "${OCons[@]}"
-        return;
-    fi
-    canAddOCons=false
-    for ocons in ${OCons[@]}
-    do
-        if [ "$ocons" == "$OCNAME" ]; then
-            canAddOCons=true
-        fi
-    done
-    if [ $canAddOCons == true ]; then
-       ORDERER_CONSORTIUM=$OCNAME
-    else
-        echo -e "${RED} Consortium name is not recognised .. plese enter from this list [ ${OCons[@]}] }"
-        readOrdererConsortium "${OCons[@]}"
-        return
-    fi
+    #
+    ## U N C O M M E N T    F O R    C O N S O R T I U M 
+    #
+    # OCons=("$@")
+    # echo -e "${LBLUE}"
+    # read -p "   Enter Consortium to be used in ORDERER : " OCNAME    
+    # echo -e "${NC}"
+    # if [ -z "$OCNAME" ]; then
+    #     echo -e "${RED}!!! Please enter a valid Name${NC}"
+    #     readOrdererConsortium "${OCons[@]}"
+    #     return;
+    # fi
+    # canAddOCons=false
+    # for ocons in ${OCons[@]}
+    # do
+    #     if [ "$ocons" == "$OCNAME" ]; then
+    #         canAddOCons=true
+    #     fi
+    # done
+    # if [ $canAddOCons == true ]; then
+    #    ORDERER_CONSORTIUM=$OCNAME
+    # else
+    #     echo -e "${RED} Consortium name is not recognised .. plese enter from this list [ ${OCons[@]}] }"
+    #     readOrdererConsortium "${OCons[@]}"
+    #     return
+    # fi
+    ORDERER_CONSORTIUM="SampleConsortium"
 }
