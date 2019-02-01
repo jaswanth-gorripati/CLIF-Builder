@@ -18,9 +18,10 @@ getNumberOfChannels() {
         getNumberOfChannels
         return;
     fi
-    reg='^[1-5]{1}$'
+    reg='^[1]{1}$'
     if [[ ! $No_of_Channels =~ $reg ]]; then
-        echo -e " ${RED}!!! Maximum 5 Channels can be used${NC}"
+        echo -e " ${RED}!!! Only 1 channel is supported , Will support multiple channels in future${NC}"
+        #echo -e " ${RED}!!! Maximum 5 Channels can be used${NC}"
         getNumberOfChannels
         return;
     fi
@@ -143,7 +144,8 @@ readChannelDetails() {
         echo "Getting details of Channel $i"
         readChannelName $CCOUNT
         CINDEX=1
-        readChannelConsortium
+        #readChannelConsortium
+        CHANNELS[$CCOUNT,$CINDEX]="SampleConsortium"
         CINDEX=3
         CHORGS=("")
         readOrgsInChannel $CINDEX
@@ -172,11 +174,14 @@ getChannelDetails() {
         #exit 0
         return
     fi
-    if [ "$cCons" == "" ]; then
-        echo "Please pass Consortium parameters"
-        #exit 0
-        return
-    fi
+    #
+    ## FOR DYNAMIC CONSORTIUM
+    #
+    # if [ "$cCons" == "" ]; then
+    #     echo "Please pass Consortium parameters"
+    #     #exit 0
+    #     return
+    # fi
     echo -e "Enter details of the CHANNELS in the network"
     getNumberOfChannels
     readChannelDetails

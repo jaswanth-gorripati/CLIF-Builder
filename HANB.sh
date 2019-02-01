@@ -261,6 +261,24 @@ function readCCver() {
   #     return;
   # fi
 }
+
+function readCCPath() {
+  echo -e "${BLUE}"
+    read -p "   Enter chaincode Path in your Machine, to install it in the network : " CC_PATH   
+    echo -e "${NC}"
+  if [ -z "$CC_PATH" ]; then
+      echo -e "${RED}!!! Please enter a valid chaincode Path${NC}"
+      readCCPath
+      return;
+  fi
+  CR=$PWD
+  cd $CC_PATH 2>&1
+  if [ $? -ne 0 ]; then
+    echo -e "${RED} Enter a valid Path from your home directory ${NC}"
+    readCCPath
+  fi
+  cd $CR
+}
 function generateDockerFiles() {
   addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME 0 ${orgDetails[0,0]} ${orgDetails[0,1]} ${orgDetails[0,2]} true 0 $ORDERER_TYPE $NO_OF_ORDERERS $ORDERER_PROFILENAME $NO_OF_KAFKAS $NO_OF_ZOOKEEPERS true
   MOPath="${CPWD}/${orgDetails[0,0]}/"
@@ -460,7 +478,7 @@ function networkSelection() {
 yourConfig() {
   echo -e "${BROWN}Your Network configuration ↓${NC}"
   arrOrgDetails
-  arrCons
+  #arrCons
   arrChnls
   printOrderer
   askProceed "Continue To generate certificates and network (y/n) ? "
@@ -514,7 +532,11 @@ function OrgDetails {
   #echo "${ORG[@]}"
   arrOrgDetails $(expr $COUNT - 1)
   #sleep 5
-  getCons
+  #
+  ## F O R    O R G A N I S A T I O N     C O N S O R T I U M 
+  #
+  #getCons
+  getChDetails
 }
 function installPreRequirements {
   echo  -e "${GREEN}installing Pre-requirements${NC}"
