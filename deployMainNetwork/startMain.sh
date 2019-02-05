@@ -198,9 +198,11 @@ chmod +x ./updateChannelConfig.sh
     if [ "${DN_ORG_SSH}" != "" ]; then
         scp ./updateChannelConfig.sh $DN_ORG_SSH:./HANB/$m_org/
         rm ./updateChannelConfig.sh
-        ssh $OG_SSH_ADD /bin/bash << EOF
-export CLI_CONTAINER=$(docker ps |grep ${m_org}_cli|awk '{print $1}');
-docker exec $CLI_CONTAINER ./updateChannelConfig.sh $ad_Org $CH_NME;
+        scp ./updateChannelConfig.sh $DN_ORG_SSH:./HANB/$m_org/
+        M_C_ID=$(ssh $DN_ORG_SSH docker ps|grep ${m_org}_cli|awk '{print $1}')
+        echo $M_C_ID
+        ssh $DN_ORG_SSH /bin/bash << EOF
+docker exec $M_C_ID ./updateChannelConfig.sh $ad_Org $CH_NME;
 EOF
    else
         cp ./updateChannelConfig.sh ~/HANB/${m_org}/
@@ -246,19 +248,21 @@ EOF
 chmod +x ./signChannelConfig.sh
 d_pth=/opt/gopath/src/github.com/hyperledger/fabric/peer/
 if [ "${DN_ORG_SSH}" != "" ]; then
-    scp ./signChannelConfig.sh $DN_ORG_SSH:./HANB/$ad_org/
+   scp ./signChannelConfig.sh $DN_ORG_SSH:./HANB/$ad_org/
     rm ./signChannelConfig.sh
+    R_C_ID=$(docker ps |grep ${ROOT_ORG}_cli|awk '{print $1}')
+    docker cp $R_C_ID:$d_pth/${sin_org}_update_in_envelope.pb ~/HANB/${ROOT_ORG}/${sin_org}_update_in_envelope.pb
     scp ~/HANB/${ROOT_ORG}/${sin_org}_update_in_envelope.pb $DN_ORG_SSH:./HANB/${ad_org}/${sin_org}_update_in_envelope.pb
+    M_C_ID=$(ssh $DN_ORG_SSH docker ps|grep ${ad_org}_cli|awk '{print $1}')
+    echo $M_C_ID    
     ssh $DN_ORG_SSH /bin/bash << EOF
-export M_C_ID=$(docker ps |grep ${ad_org}_cli|awk '{print $1}');
 docker cp ~/HANB/${ad_org}/${sin_org}_update_in_envelope.pb $M_C_ID:$d_pth/${sin_org}_update_in_envelope.pb
 EOF
     ssh $DN_ORG_SSH /bin/bash << EOF
-export M_C_ID=$(docker ps |grep ${ad_org}_cli|awk '{print $1}');
 docker exec ${M_C_ID} ./signChannelConfig.sh $p_cnt $ad_org $sin_org;
-docker cp $M_C_ID:$d_pth/${sin_org}_update_in_envelope.pb  ~/HANB/${ad_org}/${sin_org}_update_in_envelope.pb
+docker cp $M_C_ID:$d_pth/${sin_org}_update_in_envelope.pb  ./HANB/${ad_org}/${sin_org}_update_in_envelope.pb
 EOF
-    rm ~/HANB/${ROOT_ORG}/${sin_org}_update_in_envelope.pb
+    rm -f ~/HANB/${ROOT_ORG}/${sin_org}_update_in_envelope.pb
     scp $DN_ORG_SSH:./HANB/${ad_org}/${sin_org}_update_in_envelope.pb ~/HANB/${ROOT_ORG}/${sin_org}_update_in_envelope.pb
 else
 
