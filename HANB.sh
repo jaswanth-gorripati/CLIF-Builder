@@ -307,7 +307,7 @@ function generateDockerFiles() {
     else
       MOPath="${orgDetails[${DP_CNT},0]}"
       echo -e "Sending Crypto Materials to ${orgDetails[${DP_CNT},0]} organisation which is at ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]}"
-      ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} rm -rf ./HANB/* 
+      ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} rm -rf ./HANB/$MOPath
       ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} mkdir -p HANB/$MOPath 
       scp -r ${CPWD}/$MOPath/* ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]}:./HANB/$MOPath/
       ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} chmod +x ./HANB/$MOPath/*
