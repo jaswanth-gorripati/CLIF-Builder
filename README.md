@@ -1,4 +1,4 @@
-<img src="https://github.com/jaswanth-gorripati/CLIF-Builder/blob/hanb-v1.1/logo/logo.png" alt="CLIF" width="400"/>
+<p align="center"><img src="https://github.com/jaswanth-gorripati/CLIF-Builder/blob/hanb-v1.1/logo/logo.png" alt="CLIF" width="250" height="250" /></p>
 
 *CLIF is a cli based fabric network builder*
 
