@@ -19,7 +19,7 @@
 BROWN='\033[0;33m'
 NC='\033[0m'
 GREEN='\033[0;32m'
-CPWD=~/HANB
+CPWD=~/CLIF
 SELECTED_NETWORK_TYP=""
 DPath=""
 DTVPATH="./volume.yaml"
@@ -183,7 +183,7 @@ ${networkFile}
 EOF
 DPath="${CPWD}/${DORG_NAME}/.env"
 cat << EOF > ${DPath}
-COMPOSE_PROJECT_NAME=hanb
+COMPOSE_PROJECT_NAME=clif
 EOF
 chmod +x ${CPWD}/${DORG_NAME}/*.sh
 }

@@ -31,7 +31,7 @@ function SSHsendJsonFile () {
 }
 function sendJsonFile () {
   echo -e "${GREEN} sending files to ${d_ORG}${NC}"
-  cp ./${O_NAME}.json ~/HANB/${d_ORG}/
+  cp ./${O_NAME}.json ~/CLIF/${d_ORG}/
   if [ "$?" -ne 0 ]; then
     echo "Failed to send required files..."
     exit 1
