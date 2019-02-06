@@ -1,9 +1,9 @@
-#*CLIF*  
+# CLIF  
 
 *CLIF is a cli based fabric network builder*
 
 > Note :
-    >> To deploy network between Multiple machines *SSH* is used , So make sure that remote machines has ssh installed and has *_id_rsa.pub_*  key of deploying machine ( which can be found in .ssh folder ) in their *_authorized_keys_* file in *.ssh* folder
+    > To deploy network between Multiple machines *SSH* is used , So make sure that remote machines has ssh installed and has *_id_rsa.pub_*  key of Main machine ( which can be found in .ssh folder ) in their *_authorized_keys_* file in *.ssh* folder
 
 ## CLIF facilites you to choose 
 
