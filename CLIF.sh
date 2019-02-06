@@ -307,12 +307,12 @@ function generateDockerFiles() {
     else
       MOPath="${orgDetails[${DP_CNT},0]}"
       echo -e "Sending Crypto Materials to ${orgDetails[${DP_CNT},0]} organisation which is at ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]}"
-      ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} rm -rf ./HANB/$MOPath
-      ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} mkdir -p HANB/$MOPath 
-      scp -r ${CPWD}/$MOPath/* ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]}:./HANB/$MOPath/
-      ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} chmod +x ./HANB/$MOPath/*
+      ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} rm -rf ./CLIF/$MOPath
+      ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} mkdir -p CLIF/$MOPath 
+      scp -r ${CPWD}/$MOPath/* ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]}:./CLIF/$MOPath/
+      ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} chmod +x ./CLIF/$MOPath/*
       ssh ${ORGS_SSH[${orgDetails[${DP_CNT},0]}]} /bin/bash << EOF
-cd ./HANB/$MOPath/;
+cd ./CLIF/$MOPath/;
 ./generateCrypto.sh "./" ${orgDetails[${DP_CNT},0]} ${orgDetails[0,0]}
 EOF
     fi
@@ -375,6 +375,21 @@ echo " "
 PrintEnd
 }
 
+function installPq() {
+  echo "Installing in ${1}"
+  scp ./installPrerequisits.sh $1:./
+  ssh $1 ./installPrerequisits.sh
+}
+function installPreQ() {
+  ipq_ssh=$1
+  echo "${LBLUE}"
+  NIPQ=$(select_opt "Do you want to install pre-requirements at ${ipq_ssh}" "yes" "no")
+  case "$NIPQ" in
+    0) installPq ${ipq_ssh};;
+    1) echo -e "${BROWN} Assuming remote machine has all the requirements installed ${NC}"
+  esac
+  echo "${NC}"
+}
 function readSSHofOrgs() {
   for so_cnt in `seq 1 $1`
   do
@@ -393,7 +408,8 @@ function readSSH() {
       return;
   fi
   checkSSH $1 ${ORGS_SSH[${orgDetails[$O_cnt,0]}]}
-  echo $ORGS_SSH
+  installPreQ ${ORGS_SSH[${orgDetails[$O_cnt,0]}]}
+  #echo $ORGS_SSH
 }
 function checkSSH() {
     status=$(ssh -o BatchMode=yes -o ConnectTimeout=5 $2 echo ok 2>&1)
@@ -468,7 +484,7 @@ function networkSelection() {
       echo -e "${NC}"
       O_S_cnt=$( expr ${#orgDetails[@]} / 3)
       CN_s_O=$(expr $O_S_cnt - 1)
-      readSSHofOrgs $CN_s_O
+      readSSHofOrgs $CN_s_O 
     fi
     echo -e "${BROWN}Generating Required network files${NC}"
   fi
@@ -541,6 +557,10 @@ function OrgDetails {
 function installPreRequirements {
   echo  -e "${GREEN}installing Pre-requirements${NC}"
   #sleep 10
+  echo -e "${BROWN}"
+  ./installPrerequisits.sh
+  echo -e "${NC}"
+  sleep 3
   OrgDetails
 }
 function needToInstallPreRequirements {

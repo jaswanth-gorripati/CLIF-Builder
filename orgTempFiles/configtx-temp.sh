@@ -2,7 +2,7 @@
 BROWN='\033[0;33m'
 NC='\033[0m'
 GREEN='\033[0;32m'
-CPWD=~/HANB
+CPWD=~/CLIF
 
 function setOrg() {
     ORG_NAME=$1
@@ -78,7 +78,7 @@ cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
         # ID to load the MSP definition as
         ID: ${ORG_NAME1}MSP
 
-        MSPDir:  HOME_PATH/HANB/${ORG_NAME1}/crypto-config/peerOrganizations/${ORG_NAME1}.example.com/msp
+        MSPDir:  HOME_PATH/CLIF/${ORG_NAME1}/crypto-config/peerOrganizations/${ORG_NAME1}.example.com/msp
 
         AnchorPeers:
             # AnchorPeers defines the location of peers which can be used

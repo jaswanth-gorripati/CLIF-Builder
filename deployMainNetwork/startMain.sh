@@ -42,7 +42,7 @@ function startCompose() {
     Cr_D=$PWD
     cd $org_pth
     chmod +x ./dockerSetup.sh 
-    export COMPOSE_PROJECT_NAME=hanb
+    export COMPOSE_PROJECT_NAME=clif
     ./dockerSetup.sh "deployCompose" $EXT_NW
     cd $Cr_D
 }
@@ -101,9 +101,9 @@ function runMainNetwork() {
 }
 function sendOrderer() {
     if [ "$3" == "Docker-swarm-m" ]; then
-        scp -r ~/HANB/$1/crypto-config/ordererOrganizations $4:./HANB/$2/crypto-config/
+        scp -r ~/CLIF/$1/crypto-config/ordererOrganizations $4:./CLIF/$2/crypto-config/
     else
-        cp -rf ~/HANB/$1/crypto-config/ordererOrganizations ~/HANB/$2/crypto-config/
+        cp -rf ~/CLIF/$1/crypto-config/ordererOrganizations ~/CLIF/$2/crypto-config/
     fi
 }
 function addNewOrg() {
@@ -116,10 +116,10 @@ function addNewOrg() {
     OG_SSH_ADD=$7
     if [ ! -f "${ad_Org}.json" ]; then
         if [ "$DEP_TYPE" == "Docker-swarm-m" ]; then
-            scp $OG_SSH_ADD:./HANB/$ad_Org/${ad_Org}.json ~/HANB/${M_ORG}/
+            scp $OG_SSH_ADD:./CLIF/$ad_Org/${ad_Org}.json ~/CLIF/${M_ORG}/
             sendOrderer $M_ORG $ad_Org $DEP_TYPE $OG_SSH_ADD
         else
-            cp ~/HANB/${ad_Org}/${ad_Org}.json ~/HANB/${M_ORG}/
+            cp ~/CLIF/${ad_Org}/${ad_Org}.json ~/CLIF/${M_ORG}/
             sendOrderer $M_ORG $ad_Org
         fi
     fi
@@ -155,18 +155,18 @@ function AddOrgToNetwork() {
     M_OG=${11}
     if [ "$N_TYPE" == "Docker-swarm-m" ]; then
         echo ""buildNetwork" ${DS_NAME} ${ad_Org} ${CH_NME} ${CC_NAME} ${CC_VER} ${OR_AD} "github.com/chaincode/chaincode_example02/go/" $AP_CN $N_TYPE $EXT_NW"
-        scp ~/HANB/$M_OG/tokenToJoinNetwork.sh $OG_SSH_ADD:./HANB/$ad_Org/
+        scp ~/CLIF/$M_OG/tokenToJoinNetwork.sh $OG_SSH_ADD:./CLIF/$ad_Org/
         ssh $OG_SSH_ADD /bin/bash << EOF
-cd ./HANB/$ad_Org/;
+cd ./CLIF/$ad_Org/;
 chmod +x tokenToJoinNetwork.sh;
 ./tokenToJoinNetwork.sh;
 ./dockerSetup.sh "buildNetwork" $EXT_NW ${ad_Org} ${CH_NME} ${CC_NAME} ${CC_VER} ${OR_AD} "github.com/chaincode/chaincode_example02/go/" $AP_CN $N_TYPE ${DS_NAME}
 EOF
     else
         c_path=$PWD
-        cd ~/HANB/${ad_Org}/
+        cd ~/CLIF/${ad_Org}/
         echo ""buildNetwork" ${DS_NAME} ${ad_Org} ${CH_NME} ${CC_NAME} ${CC_VER} ${OR_AD} "github.com/chaincode/chaincode_example02/go/" $AP_CN $N_TYPE $EXT_NW"
-        export COMPOSE_PROJECT_NAME=hanb
+        export COMPOSE_PROJECT_NAME=clif
         ./dockerSetup.sh "buildNetwork" $EXT_NW ${ad_Org} ${CH_NME} ${CC_NAME} ${CC_VER} ${OR_AD} "github.com/chaincode/chaincode_example02/go/" $AP_CN $N_TYPE ${DS_NAME}
         cd $c_path
     fi
@@ -196,16 +196,16 @@ EOF
 echo "DN_ORG_SSH=${DN_ORG_SSH}"
 chmod +x ./updateChannelConfig.sh
     if [ "${DN_ORG_SSH}" != "" ]; then
-        scp ./updateChannelConfig.sh $DN_ORG_SSH:./HANB/$m_org/
+        scp ./updateChannelConfig.sh $DN_ORG_SSH:./CLIF/$m_org/
         rm ./updateChannelConfig.sh
-        scp ./updateChannelConfig.sh $DN_ORG_SSH:./HANB/$m_org/
+        scp ./updateChannelConfig.sh $DN_ORG_SSH:./CLIF/$m_org/
         M_C_ID=$(ssh $DN_ORG_SSH docker ps|grep ${m_org}_cli|awk '{print $1}')
         echo $M_C_ID
         ssh $DN_ORG_SSH /bin/bash << EOF
 docker exec $M_C_ID ./updateChannelConfig.sh $ad_Org $CH_NME;
 EOF
    else
-        cp ./updateChannelConfig.sh ~/HANB/${m_org}/
+        cp ./updateChannelConfig.sh ~/CLIF/${m_org}/
         rm ./updateChannelConfig.sh
         CLI_CONTAINER=$(docker ps |grep ${m_org}_cli|awk '{print $1}')
         if [ "${CLI_CONTAINER}" == "" ]; then
@@ -248,25 +248,25 @@ EOF
 chmod +x ./signChannelConfig.sh
 d_pth=/opt/gopath/src/github.com/hyperledger/fabric/peer/
 if [ "${DN_ORG_SSH}" != "" ]; then
-   scp ./signChannelConfig.sh $DN_ORG_SSH:./HANB/$ad_org/
+   scp ./signChannelConfig.sh $DN_ORG_SSH:./CLIF/$ad_org/
     rm ./signChannelConfig.sh
     R_C_ID=$(docker ps |grep ${ROOT_ORG}_cli|awk '{print $1}')
-    docker cp $R_C_ID:$d_pth/${sin_org}_update_in_envelope.pb ~/HANB/${ROOT_ORG}/${sin_org}_update_in_envelope.pb
-    scp ~/HANB/${ROOT_ORG}/${sin_org}_update_in_envelope.pb $DN_ORG_SSH:./HANB/${ad_org}/${sin_org}_update_in_envelope.pb
+    docker cp $R_C_ID:$d_pth/${sin_org}_update_in_envelope.pb ~/CLIF/${ROOT_ORG}/${sin_org}_update_in_envelope.pb
+    scp ~/CLIF/${ROOT_ORG}/${sin_org}_update_in_envelope.pb $DN_ORG_SSH:./CLIF/${ad_org}/${sin_org}_update_in_envelope.pb
     M_C_ID=$(ssh $DN_ORG_SSH docker ps|grep ${ad_org}_cli|awk '{print $1}')
     echo $M_C_ID    
     ssh $DN_ORG_SSH /bin/bash << EOF
-docker cp ~/HANB/${ad_org}/${sin_org}_update_in_envelope.pb $M_C_ID:$d_pth/${sin_org}_update_in_envelope.pb
+docker cp ~/CLIF/${ad_org}/${sin_org}_update_in_envelope.pb $M_C_ID:$d_pth/${sin_org}_update_in_envelope.pb
 EOF
     ssh $DN_ORG_SSH /bin/bash << EOF
 docker exec ${M_C_ID} ./signChannelConfig.sh $p_cnt $ad_org $sin_org;
-docker cp $M_C_ID:$d_pth/${sin_org}_update_in_envelope.pb  ./HANB/${ad_org}/${sin_org}_update_in_envelope.pb
+docker cp $M_C_ID:$d_pth/${sin_org}_update_in_envelope.pb  ./CLIF/${ad_org}/${sin_org}_update_in_envelope.pb
 EOF
-    rm -f ~/HANB/${ROOT_ORG}/${sin_org}_update_in_envelope.pb
-    scp $DN_ORG_SSH:./HANB/${ad_org}/${sin_org}_update_in_envelope.pb ~/HANB/${ROOT_ORG}/${sin_org}_update_in_envelope.pb
+    rm -f ~/CLIF/${ROOT_ORG}/${sin_org}_update_in_envelope.pb
+    scp $DN_ORG_SSH:./CLIF/${ad_org}/${sin_org}_update_in_envelope.pb ~/CLIF/${ROOT_ORG}/${sin_org}_update_in_envelope.pb
 else
 
-cp ./signChannelConfig.sh ~/HANB/$ad_org/
+cp ./signChannelConfig.sh ~/CLIF/$ad_org/
 rm ./signChannelConfig.sh
 M_C_ID=$(docker ps |grep ${m_org}_cli|awk '{print $1}')
  if [ "${M_C_ID}" == "" ]; then
@@ -278,8 +278,8 @@ A_C_ID=$(docker ps |grep ${ad_org}_cli|awk '{print $1}')
     echo -e "${RED}CONTAINER NOT found !!! ${NC}"
     exit 1
 fi
-docker cp $M_C_ID:$d_pth/${sin_org}_update_in_envelope.pb ~/HANB/${m_org}/${sin_org}_update_in_envelope.pb
-docker cp ~/HANB/${m_org}/${sin_org}_update_in_envelope.pb $A_C_ID:$d_pth 2>&1
+docker cp $M_C_ID:$d_pth/${sin_org}_update_in_envelope.pb ~/CLIF/${m_org}/${sin_org}_update_in_envelope.pb
+docker cp ~/CLIF/${m_org}/${sin_org}_update_in_envelope.pb $A_C_ID:$d_pth 2>&1
     if [ $? -ne 0 ]; then
         echo "ERROR !!!! failed"
         exit 1

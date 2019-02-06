@@ -2,7 +2,7 @@
 BROWN='\033[0;33m'
 NC='\033[0m'
 GREEN='\033[0;32m'
-CPWD=~/HANB
+CPWD=~/CLIF
 
 function gCleanFolder() {
     rm -rf $CPWD/*
