@@ -1,4 +1,4 @@
-![logo](https://github.com/jaswanth-gorripati/CLIF-Builder/blob/hanb-v1.1/logo/logo.png)
+![logo](https://github.com/jaswanth-gorripati/CLIF-Builder/blob/hanb-v1.1/logo/logo.jpeg)
 
 *CLIF is a cli based fabric network builder*
 
