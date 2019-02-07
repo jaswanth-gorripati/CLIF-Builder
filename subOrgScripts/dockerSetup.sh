@@ -154,7 +154,11 @@ function buildNetwork() {
   echo -e "${NC}"
   sleep 90
   CLI_CONTAINER=$(docker ps |grep ${C_ORG}_cli|awk '{print $1}')
-  docker exec $CLI_CONTAINER ./joinNetwork.sh $C_ORG $CH_NAME $CC_NAME $CC_VER $OR_AD $CC_PTH $P_CNT
+  docker exec $CLI_CONTAINER ./joinNetwork.sh $C_ORG $CH_NAME $OR_AD $P_CNT false
+}
+function installCC() {
+  CLI_CONTAINER=$(docker ps |grep ${C_ORG}_cli|awk '{print $1}')
+  docker exec $CLI_CONTAINER ./joinNetwork.sh $C_ORG $CH_NAME "orderer0" $P_CNT true $CC_NAME $CC_VER $CC_PTH $CC_LANG
 }
 function deployComposeNetwork() {
   docker-compose -f docker-compose.yaml up -d
@@ -172,17 +176,25 @@ elif [ "$1" == "removeSwarm" ]; then
 elif [ "$1" == "buildNetwork" ]; then
   #joinSwarm $2
   echo $@
-  DOCKER_STACK_NAME=${11}
+  DOCKER_STACK_NAME=$8
   C_ORG=$3
   CH_NAME=$4
-  CC_NAME=$5
-  CC_VER=$6
-  OR_AD=$7
-  CC_PTH=$8
-  P_CNT=$(expr $9 - 1)
-  n_type=${10}
+  OR_AD=$5
+  P_CNT=$(expr $6 - 1)
+  n_type=$7
   EXT_NTWRK=${2}
   buildNetwork
+elif [ "$1" == "installCC" ]; then
+  #joinSwarm $2
+  echo $@
+  C_ORG=$2
+  CH_NAME=$3
+  P_CNT=$(expr $4 - 1)
+  CC_NAME=$5
+  CC_VER=$6
+  CC_PTH=$7
+  CC_LANG=$8
+  installCC
 # elif [ "$1" == "deployCompose" ]; then
 #   C_ORG=$2
 #   CH_NAME=$3

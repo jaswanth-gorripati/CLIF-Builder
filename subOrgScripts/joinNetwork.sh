@@ -2,17 +2,18 @@
 
 DOMAIN="$1"
 CHANNEL_NAME="$2"
-CHAINCODENAME="$3"
-VERSION=$4
-ORDERER_NAME=$5
-LANGUAGE="golang"
+ORDERER_NAME=$3
+CHAINCODENAME="$6"
+VERSION=$7
+IS_INSTALL=$5
+LANGUAGE=$9
 COUNTER=1
 MAX_RETRY=5
 ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/$ORDERER_NAME.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
 echo "$DOMAIN"
 #CC_SRC_PATH="github.com/chaincode/chaincode_example02/go/"
-CC_SRC_PATH="$6"
-P_CNT=$7
+CC_SRC_PATH="$8"
+P_CNT=$4
 echo $VERSION
 DELAY=5
 # verify the result of the end-to-end test
@@ -52,7 +53,7 @@ joinChannelWithRetry () {
 installChaincode () {
 	setGlobals $1
         set -x
-	peer chaincode install -n $CHAINCODENAME -v ${VERSION}  -p ${CC_SRC_PATH} >&log.txt
+	peer chaincode install -n $CHAINCODENAME -v ${VERSION}  -l $LANGUAGE -p ${CC_SRC_PATH} >&log.txt
 	res=$?
         set +x
 	cat log.txt
@@ -69,7 +70,17 @@ installChaincode () {
 	echo "===================== Chaincode is installed on peer0.${DOMAIN}.example.com ===================== "
 	echo
 }
-
+if [ $IS_INSTALL == true ]; then
+peer=0
+while [ "$peer" != "$P_CNT" ]
+do
+    #sleep 10
+    installChaincode $peer 
+    sleep $DELAY
+    echo
+    peer=$(expr $peer + 1)
+done
+else
 set -x
 peer channel fetch 0 ${CHANNEL_NAME}.block -o $ORDERER_NAME.example.com:7050 -c $CHANNEL_NAME --tls --cafile $ORDERER_CA
 set +x
@@ -85,15 +96,6 @@ do
     echo
     peer=$(expr $peer + 1)
 done
-
 sleep 1
-peer=0
-while [ "$peer" != "$P_CNT" ]
-do
-    #sleep 10
-    installChaincode $peer 
-    sleep $DELAY
-    echo
-    peer=$(expr $peer + 1)
-done
+fi
 exit 0

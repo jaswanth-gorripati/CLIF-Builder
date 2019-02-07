@@ -261,23 +261,39 @@ function readCCver() {
   #     return;
   # fi
 }
+function readCCName() {
+  echo -e "${BLUE}"
+    read -p "   Enter chaincode Name to install in the network : " CC_NAME  
+    echo -e "${NC}"
+  if [ -z "$CC_NAME" ]; then
+      echo -e "${RED}!!! Please enter a chaincode Name${NC}"
+      readCCName
+      return;
+  fi
+  # reg='^[0]+$'
+  # if [[ ! $EXT_NTW_NAME =~ $reg ]]; then
+  #     echo -e " ${RED}!!! Network name must contain only Alphabets${NC}"
+  #     readNetworkName
+  #     return;
+  # fi
+}
 
 function readCCPath() {
   echo -e "${BLUE}"
-    read -p "   Enter chaincode Path in your Machine, to install it in the network : " CC_PATH   
+    read -p "   Enter chaincode Path ( github.com/chaincode/chaincode_example02/go/ ), to install it in the network : " CC_PATH   
     echo -e "${NC}"
   if [ -z "$CC_PATH" ]; then
       echo -e "${RED}!!! Please enter a valid chaincode Path${NC}"
       readCCPath
       return;
   fi
-  CR=$PWD
-  cd $CC_PATH 2>&1
-  if [ $? -ne 0 ]; then
-    echo -e "${RED} Enter a valid Path from your home directory ${NC}"
-    readCCPath
-  fi
-  cd $CR
+  # CR=$PWD
+  # cd $CC_PATH 2>&1
+  # if [ $? -ne 0 ]; then
+  #   echo -e "${RED} Enter a valid Path from your home directory ${NC}"
+  #   readCCPath
+  # fi
+  # cd $CR
 }
 function generateDockerFiles() {
   addDockerFile $SELECTED_NETWORK_TYPE "2" $EXT_NTW_NAME 0 ${orgDetails[0,0]} ${orgDetails[0,1]} ${orgDetails[0,2]} true 0 $ORDERER_TYPE $NO_OF_ORDERERS $ORDERER_PROFILENAME $NO_OF_KAFKAS $NO_OF_ZOOKEEPERS true
@@ -319,7 +335,6 @@ EOF
   done
   echo -e "${BROWN} Docker Files are generated ....${NC}"
   MOPath="${CPWD}/${orgDetails[0,0]}/"
-  readCCver
   if [ "${ORDERER_TYPE}" == "KAFKA" ]; then
     ORDR_PRFRD="orderer0"
     else
@@ -331,7 +346,7 @@ EOF
     startSwarmNetwork "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME ${T_ORGS[@]}
   fi
   echo $PWD
-  runMainNetwork "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME ${CHANNELS[0,0]} ${orgDetails[0,0]} $CC_VRSN $ORDR_PRFRD ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE $STACK_NAME
+  runMainNetwork "${CPWD}/${orgDetails[0,0]}/" $EXT_NTW_NAME ${CHANNELS[0,0]} ${orgDetails[0,0]} $ORDR_PRFRD ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE $STACK_NAME
   ad_cnt=$(expr ${#T_ORGS[@]} - 1)
   for og in `seq 1 $ad_cnt`
   do
@@ -358,7 +373,7 @@ EOF
       done
       updateChannelConfig ${T_ORGS[$tmp]} ${T_ORGS[$og]} ${CHANNELS[0,0]} $SELECTED_NETWORK_TYPE ${ORGS_SSH[${orgDetails[$tmp,0]}]}
     fi
-    AddOrgToNetwork ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE "mycc" $CC_VRSN $SELECTED_NETWORK_TYPE $EXT_NTW_NAME ${orgDetails[$og,1]} $STACK_NAME ${ORGS_SSH[${orgDetails[$og,0]}]} ${orgDetails[0,0]}
+    AddOrgToNetwork ${T_ORGS[$og]} ${CHANNELS[0,0]} $ORDERER_TYPE $SELECTED_NETWORK_TYPE $EXT_NTW_NAME ${orgDetails[$og,1]} $STACK_NAME ${ORGS_SSH[${orgDetails[$og,0]}]} ${orgDetails[0,0]}
   done
 PLC="("
 for PLC_CNT in `seq 0 $max`
@@ -367,12 +382,45 @@ do
 done
 PLC=${PLC::-1}
 PLC="${PLC})"
-instantiateChainIntoChannel ${CHANNELS[0,0]} ${T_ORGS[0]} $CC_VRSN ${orgDetails[0,1]} ${PLC}
-echo -e "${BROWN}"
-echo -e "************ ${GREEN} NETWORK SETUP IS DONE ... THANK YOU FOR USING ************${NC}"
-echo " "
-echo " "
-PrintEnd
+chaincodeDeploySpecs
+# instantiateChainIntoChannel ${CHANNELS[0,0]} ${T_ORGS[0]} $CC_VRSN ${orgDetails[0,1]} ${PLC}
+# echo -e "${BROWN}"
+# echo -e "************ ${GREEN} NETWORK SETUP IS DONE ... THANK YOU FOR USING ************${NC}"
+# echo " "
+# echo " "
+# PrintEnd
+}
+function deployCC() {
+  echo $1
+  CC_LANG=$1
+  readCCName
+  readCCver
+  readCCPath
+  installCCinChannel ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG true
+  OCNT=$( expr ${#orgDetails[@]} / 3)
+  max=$(expr $OCNT - 1)
+  for DP_CNT in `seq 1 $max`
+  do
+    installCCinChannel ${CHANNELS[0,0]} ${T_ORGS[$DP_CNT]} ${orgDetails[$DP_CNT,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG false ${ORGS_SSH[${orgDetails[$DP_CNT,0]}]}
+  done
+  echo -e "${BROWN} INSTANTIATING CHAINCODE NOW${NC}"
+  instantiateChainIntoChannel ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} ${PLC} $CC_NAME $CC_VRSN $CC_PATH $CC_LANG
+  echo -e "${BROWN}"
+  echo -e "************ ${GREEN} NETWORK SETUP IS DONE ... THANK YOU FOR USING ************${NC}"
+  echo " "
+  echo " "
+  PrintEnd
+}
+
+function chaincodeDeploySpecs() {
+  echo "${LBLUE}"
+  CC_TYPE=$(select_opt "Select chiancode type you want to deploy " "Go Chaincode" "NodeJs chaincode" "Hyperledger-Composer" )
+  case "$CC_TYPE" in
+    0) deployCC "golang";;
+    1) deployCC "node";;
+    2) echo -e "${BROWN} Hyperledger-composer is not supported yet ${NC}";sleep 3;chaincodeDeploySpecs;;
+  esac
+  echo "${NC}"
 }
 
 function installPq() {

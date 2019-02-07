@@ -8,15 +8,17 @@ GREEN='\033[0;32m'
 echo $@
 CHANNEL_NAME="$1"
 DOMAIN="$2"
-CC_SRC_PATH="$3"
-CC_VERSION="$4"
+P_CNT=$3
+IS_INSTANT=$4
+POL="${5}"
+CC_NAME="$6"
+CC_VERSION="$7"
+CC_SRC_PATH="$8"
+LANGUAGE="$9"
+IS_INSTALL=${10}
 ORDR_ADRS=orderer0
-P_CNT=$5
-IS_INSTANT=$6
-POL="${7}"
 DELAY="3"
 TIMEOUT="10"
-LANGUAGE="golang"
 COUNTER=1
 MAX_RETRY=5
 INS_RETRY=3
@@ -204,6 +206,23 @@ if [ $IS_INSTANT == true ]; then
     echo "========== Attempting to Query peer0.${DOMAIN}.exapmle.com ...$(($(date +%s)-starttime)) secs =========="
     echo -e "${NC}"
     chainQuery
+elif [ $IS_INSTALL == true ]; then
+    #Installing chaincode
+    #
+    # Chaincode installation
+    echo -e "${GREEN}"
+    echo "========== Chaincode installation started ========== "
+    echo -e "${NC}"
+    #for peer `seq 0 ${P_CNT}`
+    peer=0
+    while [ "$peer" != "$P_CNT" ]
+    do
+        #sleep 10
+        installChaincodeWithRetry $peer 
+        sleep $DELAY
+        echo
+        peer=$(expr $peer + 1)
+    done
 else
 # Channel creation 
 echo -e "${GREEN}"
@@ -236,19 +255,4 @@ echo "========== Updating Anchor peer ========="
 echo -e "${NC}"
 #sleep 10
 updateAnchorWithRetry 0
-#
-# Chaincode installation
-echo -e "${GREEN}"
-echo "========== Chaincode installation started ========== "
-echo -e "${NC}"
-#for peer `seq 0 ${P_CNT}`
-peer=0
-while [ "$peer" != "$P_CNT" ]
-do
-    #sleep 10
-    installChaincodeWithRetry $peer 
-    sleep $DELAY
-    echo
-    peer=$(expr $peer + 1)
-done
 fi
