@@ -382,7 +382,7 @@ do
 done
 PLC=${PLC::-1}
 PLC="${PLC})"
-chaincodeDeploySpecs
+deployCC $CC_TYPE_SELECTED
 # instantiateChainIntoChannel ${CHANNELS[0,0]} ${T_ORGS[0]} $CC_VRSN ${orgDetails[0,1]} ${PLC}
 # echo -e "${BROWN}"
 # echo -e "************ ${GREEN} NETWORK SETUP IS DONE ... THANK YOU FOR USING ************${NC}"
@@ -393,9 +393,6 @@ chaincodeDeploySpecs
 function deployCC() {
   echo $1
   CC_LANG=$1
-  readCCName
-  readCCver
-  readCCPath
   installCCinChannel ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG true
   OCNT=$( expr ${#orgDetails[@]} / 3)
   max=$(expr $OCNT - 1)
@@ -414,11 +411,11 @@ function deployCC() {
 
 function chaincodeDeploySpecs() {
   echo "${LBLUE}"
-  CC_TYPE=$(select_opt "Select chiancode type you want to deploy " "Go Chaincode" "NodeJs chaincode" "Hyperledger-Composer" )
+  CC_TYPE=$(select_opt "Select chiancode type you want to deploy " "Go Chaincode" "Hyperledger-Composer" )
   case "$CC_TYPE" in
-    0) deployCC "golang";;
-    1) deployCC "node";;
-    2) echo -e "${BROWN} Hyperledger-composer is not supported yet ${NC}";sleep 3;chaincodeDeploySpecs;;
+    0) CC_TYPE_SELECTED="golang";;
+    #1) CC_TYPE_SELECTED="node";;
+    1) echo -e "${BROWN} Hyperledger-composer is not supported yet ${NC}";sleep 3;chaincodeDeploySpecs;;
   esac
   echo "${NC}"
 }
@@ -536,6 +533,10 @@ function networkSelection() {
     fi
     echo -e "${BROWN}Generating Required network files${NC}"
   fi
+  chaincodeDeploySpecs
+  readCCName
+  readCCver
+  readCCPath
   generateDockerFiles
 }
 
@@ -619,7 +620,7 @@ function needToInstallPreRequirements {
   esac
 }
 function networkSelected {
-  echo  -e "${GREEN} YOu selected Fabric $1 version${NC}"
+  echo  -e "${GREEN} Working on fabric $1 version${NC}"
   #sleep 10
   needToInstallPreRequirements
 }
@@ -629,14 +630,9 @@ function select_opt {
   local result=$?
   echo $result
 }
-userChoice=$(select_opt "Select the Hyperledger-fabric version to work on :" "v1.1" "v1.2" "v1.3" "v1.4" )
+userChoice=$(select_opt "CLIF deployer for fabric version 1.1" "CONTINUE" "NO ( want other version )" )
 # clear
 case "$userChoice" in
   0) networkSelected "v1.1";;
-  1) networkSelected "v1.2";;
-  2) networkSelected "v1.3";;
-  3) networkSelected "v1.4";;
+  1) echo "";echo -e "${RED} For other version try ${BROWN} git checkout clif-<vesion>${NC}"; echo -e "${BROWN}example:${RED} git checkout clif-v1.2${NC}";echo "";;
 esac
-
-
-
