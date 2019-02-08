@@ -52,27 +52,60 @@ function deployNetwork() {
     echo -e "${RED}CONTAINER NOT found !!! ${NC}"
     exit 1
     fi
-    docker exec ${CLI_CONTAINER} ./buildingNetwork.sh $CH_NME $D_NME $CC_S_P $CC_VER $P_CT false
+    docker exec ${CLI_CONTAINER} ./buildingNetwork.sh $CH_NME $D_NME $P_CT false
     if [ $? -ne 0 ]; then
         echo "ERROR !!!! failed"
         exit 1
+    fi
+}
+function installCCinChannel() {
+    echo $@
+    CH_NME=$1
+    D_NME=$2
+    P_CT=$3
+    DD_type=$4
+    CC_NAME=$5
+    CC_VER=$6
+    CC_S_P=$7
+    C_LANG=$8
+    isMain=$9
+    if [ ${isMain} == true ];then
+        CLI_CC=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
+        docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT false "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG true
+    else
+        if [ "$DD_type" == "Docker-swarm-m" ]; then
+            SSH_dORG=${10}
+            INS_CNTR_ID=$(ssh $SSH_dORG docker ps|grep ${D_NME}_cli|awk '{print $1}')
+        echo $INS_CNTR_ID
+        ssh $SSH_dORG /bin/bash << EOF
+cd ./CLIF/${D_NME}/;
+./dockerSetup.sh "installCC" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
+EOF
+        else
+            cr=$PWD
+            cd ./CLIF/${D_NME}/;
+            ./dockerSetup.sh "installCC" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
+            cd $cr
+        fi
     fi
 }
 function instantiateChainIntoChannel() {
     echo $@
     CH_NME=$1
     D_NME=$2
-    CC_S_P=github.com/chaincode/chaincode_example02/go/
-    CC_VER=$3
-    P_CT=$4
-    POLICY=$5
+    P_CT=$3
+    POLICY=$4
+    CC_NAME=$5
+    CC_VER=$6
+    CC_S_P=$7
+    CC_LANG=$8
     # -P "OR ('Org1MSP.peer','Org2MSP.peer')"
     CLI_CONTAINER=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
     if [ "${CLI_CONTAINER}" == "" ]; then
     echo -e "${RED}CONTAINER NOT found !!! ${NC}"
     exit 1
     fi
-    docker exec ${CLI_CONTAINER} ./buildingNetwork.sh $CH_NME $D_NME $CC_S_P $CC_VER $P_CT true "$POLICY"
+    docker exec ${CLI_CONTAINER} ./buildingNetwork.sh $CH_NME $D_NME $P_CT true "$POLICY" $CC_NAME $CC_VER $CC_S_P $CC_LANG  
     if [ $? -ne 0 ]; then
         echo "ERROR !!!! failed"
         exit 1
@@ -82,14 +115,14 @@ function runMainNetwork() {
     echo $@
     org_pth=$1
     EXT_NW=$2
-    D_STK=$9
+    D_STK=$8
     CH_NME=$3
     D_NME=$4
-    CC_S_P=github.com/chaincode/chaincode_example02/go/
-    CC_VER=$5
-    ORD_adr=$6
-    P_CT=$7
-    n_tpe=$8
+    # CC_S_P=github.com/chaincode/chaincode_example02/go/
+    # CC_VER=$5
+    ORD_adr=$5
+    P_CT=$6
+    n_tpe=$7
     #startSwarmNetwork
     echo ${n_tpe}
     if [ "${n_tpe}" == "Docker-compose" ]; then
@@ -140,34 +173,32 @@ function AddOrgToNetwork() {
     ad_Org=$1
     CH_NME=$2
     O_TPE=$3
-    CC_NAME=$4
-    CC_VER=$5
-    N_TYPE=$6
-    EXT_NW=$7
-    DS_NAME=$9
+    N_TYPE=$4
+    EXT_NW=$5
+    DS_NAME=$7
     if [ "${O_TPE}" == "KAFKA" ]; then
         OR_AD="orderer0"
     else
         OR_AD="orderer0"
     fi
-    AP_CN=$8
-    OG_SSH_ADD=${10}
-    M_OG=${11}
+    AP_CN=$6
+    OG_SSH_ADD=$8
+    M_OG=$9
     if [ "$N_TYPE" == "Docker-swarm-m" ]; then
-        echo ""buildNetwork" ${DS_NAME} ${ad_Org} ${CH_NME} ${CC_NAME} ${CC_VER} ${OR_AD} "github.com/chaincode/chaincode_example02/go/" $AP_CN $N_TYPE $EXT_NW"
+        #echo ""buildNetwork" ${DS_NAME} ${ad_Org} ${CH_NME} ${CC_NAME} ${CC_VER} ${OR_AD} "github.com/chaincode/chaincode_example02/go/" $AP_CN $N_TYPE $EXT_NW"
         scp ~/CLIF/$M_OG/tokenToJoinNetwork.sh $OG_SSH_ADD:./CLIF/$ad_Org/
         ssh $OG_SSH_ADD /bin/bash << EOF
 cd ./CLIF/$ad_Org/;
 chmod +x tokenToJoinNetwork.sh;
 ./tokenToJoinNetwork.sh;
-./dockerSetup.sh "buildNetwork" $EXT_NW ${ad_Org} ${CH_NME} ${CC_NAME} ${CC_VER} ${OR_AD} "github.com/chaincode/chaincode_example02/go/" $AP_CN $N_TYPE ${DS_NAME}
+./dockerSetup.sh "buildNetwork" $EXT_NW ${ad_Org} ${CH_NME} ${OR_AD} $AP_CN $N_TYPE ${DS_NAME}
 EOF
     else
         c_path=$PWD
         cd ~/CLIF/${ad_Org}/
-        echo ""buildNetwork" ${DS_NAME} ${ad_Org} ${CH_NME} ${CC_NAME} ${CC_VER} ${OR_AD} "github.com/chaincode/chaincode_example02/go/" $AP_CN $N_TYPE $EXT_NW"
+        #echo ""buildNetwork" ${DS_NAME} ${ad_Org} ${CH_NME} ${CC_NAME} ${CC_VER} ${OR_AD} "github.com/chaincode/chaincode_example02/go/" $AP_CN $N_TYPE $EXT_NW"
         export COMPOSE_PROJECT_NAME=clif
-        ./dockerSetup.sh "buildNetwork" $EXT_NW ${ad_Org} ${CH_NME} ${CC_NAME} ${CC_VER} ${OR_AD} "github.com/chaincode/chaincode_example02/go/" $AP_CN $N_TYPE ${DS_NAME}
+        ./dockerSetup.sh "buildNetwork" $EXT_NW ${ad_Org} ${CH_NME} ${OR_AD} $AP_CN $N_TYPE ${DS_NAME}
         cd $c_path
     fi
 }
