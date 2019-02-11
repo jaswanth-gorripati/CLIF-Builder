@@ -29,9 +29,15 @@ function install() {
     sudo apt-get update
 
     # Install Git
-    echo "# Installing Git"
-    sudo apt-get install -y git
-
+    which git
+    if [ $? -eq 0 ];then
+        echo "# Installing Git"
+        sudo apt-get install -y git
+        else 
+        echo "git is installed"
+        git_ver=$(git version)
+        echo "git version: ${git_ver}"
+    fi
 
 
     # Install nvm dependencies
@@ -179,4 +185,10 @@ function composertools(){
     fi 
 
 }
+
+install
+pullingimages
+composer
+composertools
+
 
