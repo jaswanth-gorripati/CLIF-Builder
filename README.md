@@ -3,11 +3,15 @@
 *CLIF* is a cli ( terminal ) based fabric network builder
 ## CLIF allows you to choose
 +   Network deployment type
-+   In single system using Docker-compose or Docker-swarm
-+   Across multiple systems using Docker-swarm
-+   Number of Organisations
+    +   In single system using Docker-compose or Docker-swarm
+    +   Across multiple systems using Docker-swarm
++   Organisation details
+    + Number of peers
+    + Storage type ( couchdb / Leveldb )
 +   Number of Channels ( multiple channels support is in development )
 +   Type of Ordering service ( Solo / Kafka)
+    + Number of Zookeepers
+    + Number of Kafkas
 +   Chaincode type
     +   Golang chaincode
     +   Composer chaincode ( still in development )
