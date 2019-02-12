@@ -12,7 +12,7 @@ function addPeer() {
 if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   peer${P_ID}_${PORG_NAME}:
-    image: hyperledger/fabric-peer:x86_64-1.1.0
+    image: hyperledger/fabric-peer:1.2.1
     deploy:
       replicas: 1
       restart_policy:
@@ -22,7 +22,7 @@ EOF
 else
 cat << EOF >> ${DTSPATH}
   peer${P_ID}.${PORG_NAME}.example.com:
-    image: hyperledger/fabric-peer:x86_64-1.1.0
+    image: hyperledger/fabric-peer:1.2.1
     container_name: peer${P_ID}.${PORG_NAME}.example.com
 EOF
 fi
@@ -39,7 +39,7 @@ cat << EOF >> ${DTSPATH}
 EOF
 else
 cat << EOF >> ${DTSPATH}
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hanb_${EXTERNAL_NETWORK}
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=clif_${EXTERNAL_NETWORK}
 EOF
 fi
 cat << EOF >> ${DTSPATH}

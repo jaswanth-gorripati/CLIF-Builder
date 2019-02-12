@@ -175,7 +175,7 @@ chainQuery () {
         COUNTER=1
     fi
     if [ $res -eq 0 ]; then
-        VALUE=$(cat log.txt | awk '/Query Result/ {print $NF}')
+        VALUE=$(cat log.txt)
         if [ "$VALUE" == "$EXPECTED_RESULT" ]; then
             echo -e "${GREEN}"
             echo "======= Expected value  -  Returned Value =========="

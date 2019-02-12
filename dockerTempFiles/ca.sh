@@ -9,7 +9,7 @@ function addCa() {
 if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   ca_${PORG_NAME}:
-    image: hyperledger/fabric-ca:x86_64-1.1.0
+    image: hyperledger/fabric-ca:1.2.1
     deploy:
       replicas: 1
       restart_policy:
@@ -19,7 +19,7 @@ EOF
 else
 cat << EOF >> ${DTSPATH}
   ca.${PORG_NAME}:
-    image: hyperledger/fabric-ca:x86_64-1.1.0
+    image: hyperledger/fabric-ca:1.2.1
     container_name: ca-${PORG_NAME}
 EOF
 fi

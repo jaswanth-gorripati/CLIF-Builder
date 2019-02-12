@@ -210,8 +210,8 @@ function gConfigFile() {
   # ctxaddAllOrgs "org2"
   # ctxaddAllOrgs "org3"
   # ctxaddAllOrgs "org4"
-  ctxOrderer ${orderer_tpe} ${NO_OF_ORDERERS} ${NO_OF_KAFKAS}
   ctxCapabilities
+  ctxOrderer ${orderer_tpe} ${NO_OF_ORDERERS} ${NO_OF_KAFKAS}
   ctxGenesisProfile ${ORG_NAME} ${orderer_tpe} ${NO_OF_ORDERERS} ${ORDERER_PROFILENAME}
   # arr=( "Cons1" "2" "org1" "org2" )
   # ctxAddConsor ${arr[@]}
@@ -630,9 +630,9 @@ function select_opt {
   local result=$?
   echo $result
 }
-userChoice=$(select_opt "CLIF deployer for fabric version 1.1" "CONTINUE" "NO ( want other version )" )
+userChoice=$(select_opt "CLIF deployer for fabric version 1.2" "CONTINUE" "NO ( want other version )" )
 # clear
 case "$userChoice" in
-  0) networkSelected "v1.1";;
+  0) networkSelected "v1.2";;
   1) echo "";echo -e "${RED} For other version try ${BROWN} git checkout clif-<vesion>${NC}"; echo -e "${BROWN}example:${RED} git checkout clif-v1.2${NC}";echo "";;
 esac
