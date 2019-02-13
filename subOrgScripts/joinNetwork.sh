@@ -41,14 +41,14 @@ joinChannelWithRetry () {
 	cat log.txt
 	if [ $res -ne 0 -a $COUNTER -lt $MAX_RETRY ]; then
 		COUNTER=` expr $COUNTER + 1`
-		echo "peer0.${DOMAIN}.example.com failed to join the channel, Retry after $DELAY seconds"
+		echo "peer$1.${DOMAIN}.example.com failed to join the channel, Retry after $DELAY seconds"
 		sleep 3
 		joinChannelWithRetry 
         return
 	else
 		COUNTER=1
 	fi
-	verifyResult $res "After $MAX_RETRY attempts, peer0.${DOMAIN}.example.com has failed to Join the Channel"
+	verifyResult $res "After $MAX_RETRY attempts, peer$1.${DOMAIN}.example.com has failed to Join the Channel"
 }
 installChaincode () {
 	setGlobals $1
@@ -59,15 +59,15 @@ installChaincode () {
 	cat log.txt
     if [ $res -ne 0 -a $COUNTER -lt $MAX_RETRY ]; then
 		COUNTER=` expr $COUNTER + 1`
-		echo "peer0.${DOMAIN} failed to join the channel, Retry after $DELAY seconds"
+		echo "peer$1.${DOMAIN} failed to install chaincode, Retry after $DELAY seconds"
 		sleep 3
 		installChaincode 
         return
 	else
 		COUNTER=1
 	fi
-	verifyResult $res "Chaincode installation on peer0.${DOMAIN}.exapmle.com has Failed"
-	echo "===================== Chaincode is installed on peer0.${DOMAIN}.example.com ===================== "
+	verifyResult $res "Chaincode installation on peer$1.${DOMAIN}.exapmle.com has Failed"
+	echo "===================== Chaincode is installed on peer$1.${DOMAIN}.example.com ===================== "
 	echo
 }
 if [ $IS_INSTALL == true ]; then

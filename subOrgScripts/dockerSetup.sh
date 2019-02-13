@@ -135,8 +135,28 @@ function swarmJoin() {
     fi
     sleep 1
 }
+function pullImages() {
+    declare -a dockerimage=(ca orderer peer ccenv tools)
 
+    for cn in "${dockerimage[@]}"
+    do
+    echo "pulling hyperledger/fabric-${cn} image with verison 1.1"
+    docker pull hyperledger/fabric-${cn}:x86_64-1.1.0
+    done
+
+    declare -a dockerimage1=(kafka zookeeper couchdb baseimage baseos)
+
+    for cn in "${dockerimage1[@]}"
+    do 
+    echo "pulling hyperledger/fabric-${cn} image with verison 4.6"
+    docker pull hyperledger/fabric-${cn}:x86_64-0.4.6
+    done
+}
 function buildNetwork() {
+  imgs=$(docker images|grep 1.1.0)
+  if [ "${imgs}" == "" ]; then
+    pullImages
+  fi
   echo -e "${GREEN}Deploying  below services into the network${NC}${BROWN}"
   if [ "${n_type}" == "Docker-compose" ]; then
     deployComposeNetwork
@@ -189,7 +209,7 @@ elif [ "$1" == "installCC" ]; then
   echo $@
   C_ORG=$2
   CH_NAME=$3
-  P_CNT=$(expr $4 - 1)
+  P_CNT=$4
   CC_NAME=$5
   CC_VER=$6
   CC_PTH=$7
