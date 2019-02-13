@@ -401,11 +401,17 @@ Capabilities:
     # manipulated without concern for upgrading orderers.  Set the value of the
     # capability to true to require it.
     Application: &ApplicationCapabilities
-        # V1.1 for Application is a catchall flag for behavior which has been
-        # determined to be desired for all peers running v1.0.x, but the
-        # modification of which would cause incompatibilities.  Users should
-        # leave this flag set to true.
-        V1_2: true
+       # V1.3 for Application enables the new non-backwards compatible
+        # features and fixes of fabric v1.3.
+        V1_3: true
+        # V1.2 for Application enables the new non-backwards compatible
+        # features and fixes of fabric v1.2 (note, this need not be set if
+        # later version capabilities are set)
+        V1_2: false
+        # V1.1 for Application enables the new non-backwards compatible
+        # features and fixes of fabric v1.1 (note, this need not be set if
+        # later version capabilities are set).
+        V1_1: false
 EOF
 
 echo -e "${GREEN} Configtx.yaml File for ${ORG_NAME} is generated"

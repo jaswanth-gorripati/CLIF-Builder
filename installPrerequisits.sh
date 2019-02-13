@@ -135,21 +135,21 @@ function pullingimages(){
 
         for cn in "${dockerimage[@]}"
         do
-        echo "pulling hyperledger/fabric-${cn} image with verison 1.2.1"
-        docker pull hyperledger/fabric-${cn}:1.2.1
+        echo "pulling hyperledger/fabric-${cn} image with verison 1.3.0"
+        docker pull hyperledger/fabric-${cn}:1.3.0
         done
         declare -a dockerimage1=(kafka zookeeper couchdb baseimage baseos)
 
         for cn in "${dockerimage1[@]}"
         do 
-        echo "pulling hyperledger/fabric-${cn} image with verison 0.4.10"
-        docker pull hyperledger/fabric-${cn}:0.4.10
+        echo "pulling hyperledger/fabric-${cn} image with verison 0.4.13"
+        docker pull hyperledger/fabric-${cn}:0.4.13
         done
         
 }
 
 function composer(){
-    echo "installing the composer cli version of 19 for fabric-1.2.1" 
+    echo "installing the composer cli version of 19 for fabric-1.3.0" 
     npm install -g composer-cli
     echo "installing the compose rest-server"
     npm install -g composer-rest-server
