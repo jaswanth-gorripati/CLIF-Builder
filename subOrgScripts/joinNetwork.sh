@@ -1,5 +1,4 @@
 #!/bin/bash
-
 DOMAIN="$1"
 CHANNEL_NAME="$2"
 ORDERER_NAME=$3
@@ -15,6 +14,7 @@ echo "$DOMAIN"
 CC_SRC_PATH="$8"
 P_CNT=$4
 echo $VERSION
+echo $@
 DELAY=5
 # verify the result of the end-to-end test
 verifyResult () {
@@ -41,61 +41,62 @@ joinChannelWithRetry () {
 	cat log.txt
 	if [ $res -ne 0 -a $COUNTER -lt $MAX_RETRY ]; then
 		COUNTER=` expr $COUNTER + 1`
-		echo "peer0.${DOMAIN}.example.com failed to join the channel, Retry after $DELAY seconds"
+		echo "peer${1}.${DOMAIN}.example.com failed to join the channel, Retry after $DELAY seconds"
 		sleep 3
-		joinChannelWithRetry 
+		joinChannelWithRetry $1
         return
 	else
 		COUNTER=1
 	fi
-	verifyResult $res "After $MAX_RETRY attempts, peer0.${DOMAIN}.example.com has failed to Join the Channel"
+	verifyResult $res "After $MAX_RETRY attempts, peer${1}.${DOMAIN}.example.com has failed to Join the Channel"
 }
 installChaincode () {
 	setGlobals $1
         set -x
-	peer chaincode install -n $CHAINCODENAME -v ${VERSION}  -l $LANGUAGE -p ${CC_SRC_PATH} >&log.txt
+	peer chaincode install -n $CHAINCODENAME -v ${VERSION} -l $LANGUAGE -p ${CC_SRC_PATH} >&log.txt
 	res=$?
         set +x
 	cat log.txt
     if [ $res -ne 0 -a $COUNTER -lt $MAX_RETRY ]; then
 		COUNTER=` expr $COUNTER + 1`
-		echo "peer0.${DOMAIN} failed to join the channel, Retry after $DELAY seconds"
+		echo "peer$1.${DOMAIN}.example.com failed to Install chaincode , Retry after $DELAY seconds"
 		sleep 3
-		installChaincode 
+		installChaincode $1
         return
 	else
 		COUNTER=1
 	fi
-	verifyResult $res "Chaincode installation on peer0.${DOMAIN}.exapmle.com has Failed"
-	echo "===================== Chaincode is installed on peer0.${DOMAIN}.example.com ===================== "
+	verifyResult $res "Chaincode installation on peer$1.${DOMAIN}.exapmle.com has Failed"
+	echo "===================== Chaincode is installed on peer$1.${DOMAIN}.example.com ===================== "
 	echo
 }
 if [ $IS_INSTALL == true ]; then
-peer=0
-while [ "$peer" != "$P_CNT" ]
-do
-    #sleep 10
-    installChaincode $peer 
-    sleep $DELAY
-    echo
-    peer=$(expr $peer + 1)
-done
+	peersToJoin=0
+	echo "${peersToJoin}"
+	echo $P_CNT
+	while [ "$peersToJoin" != "$P_CNT" ]
+	do
+		#sleep 10
+		installChaincode $peersToJoin 
+		sleep $DELAY
+		peersToJoin=$(expr $peersToJoin + 1)
+		echo $peersToJoin
+	done
 else
-set -x
-peer channel fetch 0 ${CHANNEL_NAME}.block -o $ORDERER_NAME.example.com:7050 -c $CHANNEL_NAME --tls --cafile $ORDERER_CA
-set +x
-res=$?
-verifyResult $res "Failed to fetch channel block"
-peer=0
-echo $P_CNT
-while [ "$peer" != "$P_CNT" ]
-do
-    #sleep 10
-    joinChannelWithRetry $peer 
-    sleep $DELAY
-    echo
-    peer=$(expr $peer + 1)
-done
-sleep 1
+	set -x
+	peer channel fetch 0 ${CHANNEL_NAME}.block -o $ORDERER_NAME.example.com:7050 -c $CHANNEL_NAME --tls --cafile $ORDERER_CA
+	set +x
+	res=$?
+	verifyResult $res "Failed to fetch channel block"
+	peer=0
+	echo $P_CNT
+	while [ "$peer" != "$P_CNT" ]
+	do
+		#sleep 10
+		joinChannelWithRetry $peer 
+		sleep $DELAY
+		echo
+		peer=$(expr $peer + 1)
+	done
+	sleep 1
 fi
-exit 0

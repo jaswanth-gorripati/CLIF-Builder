@@ -83,7 +83,7 @@ cd ./CLIF/${D_NME}/;
 EOF
         else
             cr=$PWD
-            cd ./CLIF/${D_NME}/;
+            cd ~/CLIF/${D_NME}/;
             ./dockerSetup.sh "installCC" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
             cd $cr
         fi

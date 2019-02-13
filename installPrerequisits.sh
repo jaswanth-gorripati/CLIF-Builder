@@ -136,14 +136,14 @@ function pullingimages(){
         for cn in "${dockerimage[@]}"
         do
         echo "pulling hyperledger/fabric-${cn} image with verison 1.2.1"
-        docker pull hyperledger/fabric-${cn}:x86_64-1.2.1
+        docker pull hyperledger/fabric-${cn}:1.2.1
         done
         declare -a dockerimage1=(kafka zookeeper couchdb baseimage baseos)
 
         for cn in "${dockerimage1[@]}"
         do 
         echo "pulling hyperledger/fabric-${cn} image with verison 0.4.10"
-        docker pull hyperledger/fabric-${cn}:x86_64-0.4.10
+        docker pull hyperledger/fabric-${cn}:0.4.10
         done
         
 }
