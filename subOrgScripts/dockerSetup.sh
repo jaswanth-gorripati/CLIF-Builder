@@ -140,21 +140,21 @@ function pullDockerImages() {
 
     for cn in "${dockerimage[@]}"
     do
-    echo "pulling hyperledger/fabric-${cn} image with verison 1.3.0"
-    docker pull hyperledger/fabric-${cn}:1.3.0
+    echo "pulling hyperledger/fabric-${cn} image with verison 1.4.0"
+    docker pull hyperledger/fabric-${cn}:1.4.0
     done
     declare -a dockerimage1=(kafka zookeeper couchdb baseimage baseos)
 
     for cn in "${dockerimage1[@]}"
     do 
-    echo "pulling hyperledger/fabric-${cn} image with verison 0.4.13"
-    docker pull hyperledger/fabric-${cn}:0.4.13
+    echo "pulling hyperledger/fabric-${cn} image with verison 0.4.14"
+    docker pull hyperledger/fabric-${cn}:0.4.14
     done
 }
 
 function buildNetwork() {
   echo -e "${GREEN}Deploying  below services into the network${NC}${BROWN}"
-  images=$(docker images|grep 1.3.0)
+  images=$(docker images|grep 1.4.0)
   if [ "${images}" == "" ]; then
     pullDockerImages
   fi

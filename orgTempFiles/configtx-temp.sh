@@ -401,7 +401,7 @@ Capabilities:
     # manipulated without concern for upgrading orderers.  Set the value of the
     # capability to true to require it.
     Application: &ApplicationCapabilities
-       # V1.3 for Application enables the new non-backwards compatible
+        # V1.3 for Application enables the new non-backwards compatible
         # features and fixes of fabric v1.3.
         V1_3: true
         # V1.2 for Application enables the new non-backwards compatible

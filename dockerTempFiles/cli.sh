@@ -8,7 +8,7 @@ function addCli() {
 if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   ${PORG_NAME}_cli:
-    image: hyperledger/fabric-tools:1.3.0
+    image: hyperledger/fabric-tools:1.4.0
     deploy:
       replicas: 1
       resources:
@@ -22,7 +22,7 @@ EOF
 else
 cat << EOF >> ${DTSPATH}
   ${PORG_NAME}_cli:
-    image: hyperledger/fabric-tools:1.3.0
+    image: hyperledger/fabric-tools:1.4.0
     container_name: ${PORG_NAME}_cli
 EOF
 fi
@@ -32,8 +32,8 @@ cat << EOF >> ${DTSPATH}
     environment:
       - GOPATH=/opt/gopath
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-      #- CORE_LOGGING_LEVEL=DEBUG
-      - CORE_LOGGING_LEVEL=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
       - CORE_PEER_ID=${PORG_NAME}_cli
       - CORE_PEER_ADDRESS=peer0.${PORG_NAME}.example.com:7051
       - CORE_PEER_LOCALMSPID=${PORG_NAME}MSP

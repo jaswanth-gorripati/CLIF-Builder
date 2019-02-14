@@ -403,7 +403,7 @@ function deployCC() {
   echo -e "${BROWN} INSTANTIATING CHAINCODE NOW${NC}"
   instantiateChainIntoChannel ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} ${PLC} $CC_NAME $CC_VRSN $CC_PATH $CC_LANG
   echo -e "${BROWN}"
-  echo -e "************ ${GREEN} NETWORK SETUP IS DONE ... THANK YOU FOR USING ************${NC}"
+  echo -e "************ ${GREEN} NETWORK SETUP IS DONE ... THANK YOU FOR USING${BROWN} ************${NC}"
   echo " "
   echo " "
   PrintEnd
@@ -630,9 +630,9 @@ function select_opt {
   local result=$?
   echo $result
 }
-userChoice=$(select_opt "CLIF deployer for fabric version 1.3" "CONTINUE" "NO ( want other version )" )
+userChoice=$(select_opt "CLIF deployer for fabric version 1.4" "CONTINUE" "NO ( want other version )" )
 # clear
 case "$userChoice" in
-  0) networkSelected "v1.3";;
+  0) networkSelected "v1.4";;
   1) echo "";echo -e "${RED} For other version try ${BROWN} git checkout clif-<vesion>${NC}"; echo -e "${BROWN}example:${RED} git checkout clif-v1.1${NC}";echo "";;
 esac
