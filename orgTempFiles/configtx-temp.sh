@@ -46,6 +46,16 @@ function ctxOrgaizations() {
 
         # MSPDir is the filesystem path which contains the MSP configuration
         MSPDir: crypto-config/ordererOrganizations/example.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin')"
 
     - &${ORG_NAME}
         # DefaultOrg defines the organization which is used in the sampleconfig
@@ -56,6 +66,16 @@ function ctxOrgaizations() {
         ID: ${ORG_NAME}MSP
 
         MSPDir: crypto-config/peerOrganizations/${ORG_NAME}.example.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('${ORG_NAME}MSP.admin', '${ORG_NAME}MSP.peer', '${ORG_NAME}MSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('${ORG_NAME}MSP.admin', '${ORG_NAME}MSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('${ORG_NAME}MSP.admin')"
 
         AnchorPeers:
             # AnchorPeers defines the location of peers which can be used
@@ -79,6 +99,16 @@ cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
         ID: ${ORG_NAME1}MSP
 
         MSPDir:  HOME_PATH/CLIF/${ORG_NAME1}/crypto-config/peerOrganizations/${ORG_NAME1}.example.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('${ORG_NAME1}MSP.admin', '${ORG_NAME1}MSP.peer', '${ORG_NAME1}MSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('${ORG_NAME1}MSP.admin', '${ORG_NAME1}MSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('${ORG_NAME1}MSP.admin')"
 
         AnchorPeers:
             # AnchorPeers defines the location of peers which can be used
@@ -150,6 +180,64 @@ cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
     # Organizations is the list of orgs which are defined as participants on
     # the orderer side of the network
     Organizations:
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        # BlockValidation specifies what signatures must be included in the block
+        # from the orderer for the peer to validate it.
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+Application: &ApplicationDefaults
+
+    # Organizations is the list of orgs which are defined as participants on
+    # the application side of the network
+    Organizations:
+
+    # Policies defines the set of policies at this level of the config tree
+    # For Application policies, their canonical path is
+    #   /Channel/Application/<PolicyName>
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+
+Channel: &ChannelDefaults
+    # Policies defines the set of policies at this level of the config tree
+    # For Channel policies, their canonical path is
+    #   /Channel/<PolicyName>
+    Policies:
+        # Who may invoke the 'Deliver' API
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        # Who may invoke the 'Broadcast' API
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        # By default, who may modify elements at this config level
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+
+    # Capabilities describes the channel level capabilities, see the
+    # dedicated Capabilities section elsewhere in this file for a full
+    # description
+    Capabilities:
+        <<: *ChannelCapabilities
 EOF
 }
 
@@ -170,8 +258,7 @@ GENESIS_NAME=$4
 Profiles:
 
     ${GENESIS_NAME}:
-        Capabilities:
-            <<: *ChannelCapabilities
+        <<: *ChannelDefaults
         Orderer:
             <<: *OrdererDefaults
             OrdererType: ${CTXORDRTYP}
@@ -314,11 +401,17 @@ Capabilities:
     # manipulated without concern for upgrading orderers.  Set the value of the
     # capability to true to require it.
     Application: &ApplicationCapabilities
-        # V1.1 for Application is a catchall flag for behavior which has been
-        # determined to be desired for all peers running v1.0.x, but the
-        # modification of which would cause incompatibilities.  Users should
-        # leave this flag set to true.
-        V1_1: true
+        # V1.3 for Application enables the new non-backwards compatible
+        # features and fixes of fabric v1.3.
+        V1_3: true
+        # V1.2 for Application enables the new non-backwards compatible
+        # features and fixes of fabric v1.2 (note, this need not be set if
+        # later version capabilities are set)
+        V1_2: false
+        # V1.1 for Application enables the new non-backwards compatible
+        # features and fixes of fabric v1.1 (note, this need not be set if
+        # later version capabilities are set).
+        V1_1: false
 EOF
 
 echo -e "${GREEN} Configtx.yaml File for ${ORG_NAME} is generated"

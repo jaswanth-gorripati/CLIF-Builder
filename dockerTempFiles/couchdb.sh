@@ -11,7 +11,7 @@ function addCouch() {
 if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   couchdb${COUCH_ID}_${CORG}:
-    image: hyperledger/fabric-couchdb:x86_64-0.4.6
+    image: hyperledger/fabric-couchdb:0.4.14
     deploy:
       replicas: 1
       restart_policy:
@@ -21,7 +21,7 @@ EOF
 else
 cat << EOF >> ${DTSPATH}
   couchdb${COUCH_ID}.${CORG}:
-    image: hyperledger/fabric-couchdb:x86_64-0.4.6
+    image: hyperledger/fabric-couchdb:0.4.14
     container_name: couchdb${COUCH_ID}.${CORG}
 EOF
 fi

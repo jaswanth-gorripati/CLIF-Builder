@@ -16,7 +16,7 @@ function addOrderer() {
 if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   orderer${ORDR_ID}:
-    image: hyperledger/fabric-orderer:x86_64-1.1.0
+    image: hyperledger/fabric-orderer:1.4.0
     deploy:
       replicas: 1
       restart_policy:
@@ -26,7 +26,7 @@ EOF
 else
 cat << EOF >> ${DTSPATH}
   orderer${ORDR_ID}.example.com:
-    image: hyperledger/fabric-orderer:x86_64-1.1.0
+    image: hyperledger/fabric-orderer:1.4.0
     container_name: orderer${ORDR_ID}.example.com
 EOF
 fi

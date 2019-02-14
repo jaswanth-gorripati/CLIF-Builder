@@ -12,13 +12,13 @@ function addKafka() {
 if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   kafka${KF_ID}:
-    image: hyperledger/fabric-kafka:x86_64-0.4.6
+    image: hyperledger/fabric-kafka:0.4.14
     hostname: kafka${KF_ID}
 EOF
 else
 cat << EOF >> ${DTSPATH}
   kafka${KF_ID}:
-    image: hyperledger/fabric-kafka:x86_64-0.4.6
+    image: hyperledger/fabric-kafka:0.4.14
     container_name: kafka${KF_ID}
 EOF
 fi
