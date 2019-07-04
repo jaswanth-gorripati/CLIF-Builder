@@ -1,0 +1,26 @@
+#!/bin/bash
+
+ORG="org1"
+DATA=data
+ORG_PATH=~/CLIF/${ORG}
+DOMAIN=example.com
+NUM_PEERS=3
+PEER_START_PORT=7
+USE_COUCHDB=true
+COUCHDB_START_PORT=5
+RCA_PORT=7
+USE_ICA=true
+ICA_PORT=8
+EXTERNAL_NETWROK_NAME=esrts
+DOCKER_NETWORK_TYPE="DOCKER-COMPOSE"
+IS_ORDERER_ORG=true
+DOCKER_STACK_NAME=
+ORDERER_TYPE="kafka"
+ORDERER_NAME=orderer
+NUM_ORDERERS=2
+NUM_KAFKAS=5
+NUM_ZOOKEEPERS=4
+ORDERER_BUILD="image: hyperledger/fabric-ca-orderer"
+PEER_BUILD="image: hyperledger/fabric-ca-peer"
+TOOLS_BUILD="image: hyperledger/fabric-ca-tools"
+FABRIC_CA_TAG=1.4.0

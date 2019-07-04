@@ -1,0 +1,12 @@
+{
+	"$class": "AddMSH",
+	"MSHKEY": "MSH1",
+	"SendingApplicationNamespaceID": "SAN1",
+	"SendingApplicationUniversalID": "SAUI1",
+	"SendingApplicationUniversalIDType": "SAUIT1"
+}
+
+"{\"OrganizationID\":\"ORG1\",\"OrganizationName\":\"ORGANISATION1\",\"OrganizationCode\":\"ORG\",\"OrganizationType\":\"ESD\"}"
+
+{"$class":"Adddestorg","MSHKEY":"MSH1","SrcOrganizationID":"ORG1","DestOrganization":"ORG2"}
+
