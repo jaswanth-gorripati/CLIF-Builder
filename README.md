@@ -1,4 +1,4 @@
-<p align="center"><img src="https://github.com/jaswanth-gorripati/CLIF-Builder/blob/master/logo/logo.png" alt="CLIF" width="250" height="250" /></p>
+<p align="center"><img src="https://github.com/therockstarrocking/CLIF-Builder/blob/master/logo/logo.png" alt="CLIF" width="250" height="250" /></p>
 
 *CLIF* is a cli ( terminal ) based fabric network builder
 ## CLIF allows you to choose
