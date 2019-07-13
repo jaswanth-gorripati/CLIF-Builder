@@ -120,7 +120,7 @@ updateAnchorWithRetry () {
 installChaincodeWithRetry () {
     setGlobals $1 
     set -x
-	peer chaincode install -n mycc -v ${CC_VERSION} -l ${LANGUAGE} -p ${CC_SRC_PATH} >&log.txt
+	peer chaincode install -n ${CC_NAME} -v ${CC_VERSION} -l ${LANGUAGE} -p ${CC_SRC_PATH} >&log.txt
 	res=$?
     set +x
 	cat log.txt
@@ -140,7 +140,7 @@ installChaincodeWithRetry () {
 instantiatedWithRetry () {
     setGlobals $1 
     set -x
-    peer chaincode instantiate -o $ORDR_ADRS.example.com:7050 --tls --cafile $ORDERER_CA -C $CHANNEL_NAME -n mycc -v ${CC_VERSION} -c '{"Args":["init","a", "100", "b","200"]}' -P "OR ${POL}"
+    peer chaincode instantiate -o $ORDR_ADRS.example.com:7050 --tls --cafile $ORDERER_CA -C $CHANNEL_NAME -n ${CC_NAME} -v ${CC_VERSION} -c '{"Args":["init","a", "100", "b","200"]}' -P "OR ${POL}"
     res=$?
     set +x
     cat log.txt
@@ -160,7 +160,7 @@ instantiatedWithRetry () {
 chainQuery () {
     sleep 10
     set -x
-    peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}' >&log.txt
+    peer chaincode query -C $CHANNEL_NAME -n ${CC_NAME} -c '{"Args":["query","a"]}' >&log.txt
     res=$?
     set +x
     cat log.txt

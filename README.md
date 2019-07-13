@@ -23,6 +23,6 @@
 + Go to the CLIF-Builder folder and run  ./CLIF.sh 
 + Enter the details as it prompts 
 
-> Note :  To deploy network between Multiple machines SSH is used , So make sure that remote machines has SSH installed and has *id_rsa.pub* key of Main machine ( which can be found in *.ssh* folder ) in their *authorized_keys* file in *.ssh* folder
+> Note :  To deploy network between Multiple machines SSH is used , So make sure that remote machines has SSH installed and has *id_rsa.pub* key of Main machine ( which can be found in *.ssh* folder ) in their *authorized_keys* file in *.ssh* folder.
 
 
