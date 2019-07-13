@@ -1,6 +1,0 @@
-#!/bin/bash
-ORGS=""
-PEERSCOUNT=""
-USE_COUCHDB=""
-USE_INTERMEDIATE_CAS=""
-
