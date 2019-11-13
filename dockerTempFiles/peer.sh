@@ -12,7 +12,7 @@ function addPeer() {
 if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   peer${P_ID}_${PORG_NAME}:
-    image: hyperledger/fabric-peer:1.4.0
+    image: hyperledger/fabric-peer:1.4.3
     deploy:
       replicas: 1
       restart_policy:
@@ -22,7 +22,7 @@ EOF
 else
 cat << EOF >> ${DTSPATH}
   peer${P_ID}.${PORG_NAME}.example.com:
-    image: hyperledger/fabric-peer:1.4.0
+    image: hyperledger/fabric-peer:1.4.3
     container_name: peer${P_ID}.${PORG_NAME}.example.com
 EOF
 fi

@@ -15,15 +15,24 @@ Verify() {
     #echo $@
     val=$1
     fc=$2
+    OT=$4
     if [ "$val" == "" ]; then
         echo -e "${RED}!!! Please enter a value${NC}"
-        $fc
+        $fc $OT
         return;
     fi
-    reg='^[1-5]{1}$'
+    if [ "$OT" == "RAFT" ]; then
+        reg='^[3,5]{1}$'
+    else
+        reg='^[1-5]{1}$'
+    fi
     if [[ ! $val =~ $reg ]]; then
-        echo -e " ${RED}!!! Maximum 5 ${3} can be used${NC}"
-        $fc
+        if [ "$OT" == "RAFT" ]; then
+            echo -e " ${RED}!!! Only 5 or 3 ${3} can be used${NC}"
+        else
+            echo -e " ${RED}!!! Maximum 5 ${3} can be used${NC}"
+        fi
+        $fc $OT
         return;
     fi
 }
@@ -32,7 +41,7 @@ readNoOfOrderers() {
     read -p "   Enter Number of Orderers to be used :   " NO_OF_ORDERERS  
     echo -e "${NC}"
     #echo "$NO_OF_ORDERER"
-    Verify "${NO_OF_ORDERERS}" "readNoOfOrderers" "Orderer"
+    Verify "${NO_OF_ORDERERS}" "readNoOfOrderers" "Orderers" $1
 }
 
 readKafkaDetails() {

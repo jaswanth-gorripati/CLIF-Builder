@@ -201,7 +201,11 @@ printOrderer() {
 function gConfigFile() {
   ORG_NAME=${orgDetails[0,0]}
   setOrg $ORG_NAME
-  orderer_tpe=$(echo "$ORDERER_TYPE" | awk '{print tolower($0)}')
+  if [ "$ORDERER_TYPE" == "RAFT" ]; then
+    orderer_tpe="etcdraft"
+  else
+    orderer_tpe=$(echo "$ORDERER_TYPE" | awk '{print tolower($0)}')
+  fi
   ctxFile
   ctxOrgaizations ${ORG_NAME}
   #
@@ -238,6 +242,7 @@ function gCryptoConfig() {
       case $ORDERER_TYPE in
       "SOLO") gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "true" $ORDERER_TYPE;;
       "KAFKA") gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "true" $ORDERER_TYPE $NO_OF_ORDERERS;;
+      "RAFT") gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "true" $ORDERER_TYPE $NO_OF_ORDERERS;;
     esac
     else
       gCryptoPeers ${orgDetails[${inx},0]} ${orgDetails[${inx},1]} "false"
@@ -428,10 +433,10 @@ function installPq() {
 function installPreQ() {
   ipq_ssh=$1
   echo "${LBLUE}"
-  NIPQ=$(select_opt "Do you want to install pre-requirements at ${ipq_ssh}" "yes" "no")
+  NIPQ=$(select_opt "Do you want to install pre-requirements at ${ipq_ssh}" "NO" "YES")
   case "$NIPQ" in
-    0) installPq ${ipq_ssh};;
-    1) echo -e "${BROWN} Assuming remote machine has all the requirements installed ${NC}"
+    0) echo -e "${BROWN} Assuming remote machine has all the requirements installed ${NC}";;
+    1) installPq ${ipq_ssh};;
   esac
   echo "${NC}"
 }
@@ -559,6 +564,10 @@ getOrdererDetails() {
     readOrdererProfileName
     readOrdererConsortium "${CON[@]}"
     #printOrderer
+  elif [ "$ORDERER_TYPE" == "RAFT" ]; then
+    readOrdererProfileName
+    readOrdererConsortium "${CON[@]}"
+    readNoOfOrderers $ORDERER_TYPE
   else
     readOrdererProfileName
     readOrdererConsortium "${CON[@]}"
@@ -570,10 +579,11 @@ getOrdererDetails() {
   yourConfig
 }
 readOrdererType() {
-  Orderer_type=$(select_opt "Select the Orderer type to work on : " "SOLO" "KAFKA")
+  Orderer_type=$(select_opt "Select the Orderer type to work on : " "SOLO" "KAFKA" "RAFT")
   case "$Orderer_type" in
     0) getOrdererDetails "SOLO";;
     1) getOrdererDetails "KAFKA";;
+    2) getOrdererDetails "RAFT";;
   esac
 }
 function getChDetails() {
@@ -613,10 +623,10 @@ function installPreRequirements {
   OrgDetails
 }
 function needToInstallPreRequirements {
-  insP=$(select_opt "Do you want to install all Prerequirements ?" "YES" "NO" )
+  insP=$(select_opt "Do you want to install all Prerequirements ?" "NO" "YES" )
   case "$insP" in 
-    0) installPreRequirements ;;
-    1) echo "Assuming Prerequirements  are installed";OrgDetails;;
+    0) echo "Assuming Prerequirements  are installed";OrgDetails;;
+    1) installPreRequirements ;;
   esac
 }
 function networkSelected {
@@ -630,9 +640,9 @@ function select_opt {
   local result=$?
   echo $result
 }
-userChoice=$(select_opt "CLIF deployer for fabric version 1.4" "CONTINUE" "NO ( want other version )" )
+userChoice=$(select_opt "CLIF deployer for fabric version 1.4.3" "CONTINUE" "NO ( want other version )" )
 # clear
 case "$userChoice" in
-  0) networkSelected "v1.4";;
+  0) networkSelected "v1.4.3";;
   1) echo "";echo -e "${RED} For other version try ${BROWN} git checkout clif-<vesion>${NC}"; echo -e "${BROWN}example:${RED} git checkout clif-v1.1${NC}";echo "";;
 esac

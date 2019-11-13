@@ -8,7 +8,7 @@ function addZookeeper() {
     d_type="$4"
     cat << EOF >> ${DTSPATH}
   zookeeper${ZOO_ID}:
-    image: hyperledger/fabric-zookeeper:0.4.14
+    image: hyperledger/fabric-zookeeper:0.4.15
 EOF
 if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}

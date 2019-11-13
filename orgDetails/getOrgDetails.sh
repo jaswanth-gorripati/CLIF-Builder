@@ -45,9 +45,9 @@ function PeerCount () {
         PeerCount $index
         return;
     fi
-    reg='^[1-3]{1}$'
+    reg='^[1-4]{1}$'
     if [[ ! $Peer_count =~ $reg ]]; then
-        echo -e "${RED}!!! Maximum 3 peers can be used${NC}"
+        echo -e "${RED}!!! Maximum 4 peers can be used${NC}"
         PeerCount $index
         return;
     fi

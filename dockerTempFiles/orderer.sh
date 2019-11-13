@@ -16,7 +16,7 @@ function addOrderer() {
 if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   orderer${ORDR_ID}:
-    image: hyperledger/fabric-orderer:1.4.0
+    image: hyperledger/fabric-orderer:1.4.3
     deploy:
       replicas: 1
       restart_policy:
@@ -26,7 +26,7 @@ EOF
 else
 cat << EOF >> ${DTSPATH}
   orderer${ORDR_ID}.example.com:
-    image: hyperledger/fabric-orderer:1.4.0
+    image: hyperledger/fabric-orderer:1.4.3
     container_name: orderer${ORDR_ID}.example.com
 EOF
 fi
@@ -50,15 +50,15 @@ EOF
 fi
 cat << EOF >> ${DTSPATH}
       - ORDERER_GENERAL_GENESISPROFILE=${OR_P_NAME}
-      - ORDERER_ABSOLUTEMAXBYTES=10 MB
-      - ORDERER_PREFERREDMAXBYTES=512 KB
+      - ORDERER_ABSOLUTEMAXBYTES=99 MB
+      - ORDERER_PREFERREDMAXBYTES=512 MB
       - ORDERER_HOME=/var/hyperledger/orderer
       - ORDERER_GENERAL_LOGLEVEL=debug
-      - ORDERER_GENERAL_LEDGERTYPE=ram
+      - ORDERER_GENERAL_LEDGERTYPE=file
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
-      - CONFIGTX_ORDERER_BATCHSIZE_MAXMESSAGECOUNT=10
-      - CONFIGTX_ORDERER_BATCHTIMEOUT=2s
+      - CONFIGTX_ORDERER_BATCHSIZE_MAXMESSAGECOUNT=50
+      - CONFIGTX_ORDERER_BATCHTIMEOUT=1s
       - CONFIGTX_ORDERER_ADDRESSES=[127.0.0.1:7050]
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_LISTENPORT=7050
@@ -69,10 +69,12 @@ cat << EOF >> ${DTSPATH}
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
-      - ORDERER_TLS_CLIENTAUTHREQUIRED=false
-      - ORDERER_TLS_CLIENTROOTCAS_FILES=/var/hyperledger/users/Admin@example.com/tls/ca.crt
-      - ORDERER_TLS_CLIENTCERT_FILE=/var/hyperledger/users/Admin@example.com/tls/client.crt
-      - ORDERER_TLS_CLIENTKEY_FILE=/var/hyperledger/users/Admin@example.com/tls/client.key
+      # - ORDERER_TLS_CLIENTAUTHREQUIRED=false
+      # - ORDERER_TLS_CLIENTROOTCAS_FILES=/var/hyperledger/users/Admin@example.com/tls/ca.crt
+      # - ORDERER_TLS_CLIENTCERT_FILE=/var/hyperledger/users/Admin@example.com/tls/client.crt
+      # - ORDERER_TLS_CLIENTKEY_FILE=/var/hyperledger/users/Admin@example.com/tls/client.key
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
     command: orderer
     volumes:

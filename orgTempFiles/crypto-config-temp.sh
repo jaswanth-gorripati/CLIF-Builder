@@ -11,6 +11,7 @@ function gFolder() {
     mkdir -p $CPWD/${ORG_NAME}/
     cp -rf bin/ $CPWD/${ORG_NAME}/
     cp -rf chaincode/ $CPWD/${ORG_NAME}/
+    #cp  ./mainOrgScripts/fabric-ca-server-config.yaml $CPWD/${ORG_NAME}/
 
 }
 
@@ -30,7 +31,7 @@ OrdererOrgs:
     # ---------------------------------------------------------------------------
     Specs:
 EOF
-if [ ${ORDR_TYPE} == "KAFKA" ]; then
+if [ "${ORDR_TYPE}" != "SOLO" ]; then
     for ordr in `seq 0 $(expr $NO_OF_PEERS_ORDRS - 1)`
     do
     cat << EOF >> $CPWD/${ORG_NAME}/crypto-config.yaml
@@ -49,7 +50,7 @@ function gCryptoPeers() {
     ORDERER_EXISTS=$3
     if [ "${ORDERER_EXISTS}" == "true" ]; then
         ORDR_TYPE=$4
-        if [ "${ORDR_TYPE}" == "KAFKA" ]; then
+        if [ "${ORDR_TYPE}" != "SOLO" ]; then
             NO_OF_PEERS_ORDRS=$5
         fi
     fi

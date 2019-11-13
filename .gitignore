@@ -1,0 +1,11 @@
+dockerTempFiles/temp.sh
+scripts
+/chaincode/chaincode_example02/dsc/
+/chaincode/chaincode_example02/go-mvcc-bug/
+/chaincode/chaincode_example02/go-nr
+/chaincode/chaincode_example02/go-or
+/chaincode/chaincode_example02/go-wo-queries
+/chaincode/chaincode_example02/node
+/chaincode/chaincode_example02/realinvest
+/chaincode/chaincode_example02/go-withQueryString.zip
+/chaincode/chaincode_example02/go-hie

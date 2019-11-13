@@ -136,10 +136,20 @@ Orderer: &OrdererDefaults
 
     # Orderer Type: The orderer implementation to start
     # Available types are "solo" and "kafka"
+EOF
+if [ "$CTXORDRTYP" == "etcdraft" ]; then
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
+    OrdererType: solo
+
+    Addresses:
+EOF
+else
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
     OrdererType: ${CTXORDRTYP}
 
     Addresses:
 EOF
+fi
 for ordr in `seq 0 ${CTX_NO_ORDR}`
 do
     cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
@@ -148,13 +158,13 @@ EOF
 done
     cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
     # Batch Timeout: The amount of time to wait before creating a batch
-    BatchTimeout: 2s
+    BatchTimeout: 1s
 
     # Batch Size: Controls the number of messages batched into a block
     BatchSize:
 
         # Max Message Count: The maximum number of messages to permit in a batch
-        MaxMessageCount: 20
+        MaxMessageCount: 50
 
         # Absolute Max Bytes: The absolute maximum number of bytes allowed for
         # the serialized messages in a batch.
@@ -262,6 +272,23 @@ Profiles:
         Orderer:
             <<: *OrdererDefaults
             OrdererType: ${CTXORDRTYP}
+EOF
+if [ "$CTXORDRTYP" == "etcdraft" ]; then
+    cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
+            EtcdRaft:
+                Consenters:
+EOF
+    for order in `seq 0 ${CTX_NO_ORDR}`
+    do
+        cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
+                - Host: orderer${order}.example.com
+                  Port: 7050
+                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer${order}.example.com/tls/server.crt
+                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer${order}.example.com/tls/server.crt
+EOF
+    done
+fi
+cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
             Addresses:
 EOF
 for order in `seq 0 ${CTX_NO_ORDR}`
@@ -380,30 +407,45 @@ Application: &ApplicationDefaults
 Capabilities:
     # Channel capabilities apply to both the orderers and the peers and must be
     # supported by both.  Set the value of the capability to true to require it.
-    Global: &ChannelCapabilities
-        # V1.1 for Global is a catchall flag for behavior which has been
-        # determined to be desired for all orderers and peers running v1.0.x,
-        # but the modification of which would cause incompatibilities.  Users
-        # should leave this flag set to true.
-        V1_1: true
+    Channel: &ChannelCapabilities
+        # V1.4.3 for Channel is a catchall flag for behavior which has been
+        # determined to be desired for all orderers and peers running at the v1.4.3
+        # level, but which would be incompatible with orderers and peers from
+        # prior releases.
+        # Prior to enabling V1.4.3 channel capabilities, ensure that all
+        # orderers and peers on a channel are at v1.4.3 or later.
+        V1_4_3: true
+        # V1.3 for Channel enables the new non-backwards compatible
+        # features and fixes of fabric v1.3
+        V1_3: false
+        # V1.1 for Channel enables the new non-backwards compatible
+        # features and fixes of fabric v1.1
+        V1_1: false
 
     # Orderer capabilities apply only to the orderers, and may be safely
     # manipulated without concern for upgrading peers.  Set the value of the
     # capability to true to require it.
     Orderer: &OrdererCapabilities
-        # V1.1 for Order is a catchall flag for behavior which has been
-        # determined to be desired for all orderers running v1.0.x, but the
-        # modification of which  would cause incompatibilities.  Users should
-        # leave this flag set to true.
-        V1_1: true
+        # V1.4.2 for Orderer is a catchall flag for behavior which has been
+        # determined to be desired for all orderers running at the v1.4.2
+        # level, but which would be incompatible with orderers from prior releases.
+        # Prior to enabling V1.4.2 orderer capabilities, ensure that all
+        # orderers on a channel are at v1.4.2 or later.
+        V1_4_2: true
+        # V1.1 for Orderer enables the new non-backwards compatible
+        # features and fixes of fabric v1.1
+        V1_1: false
 
     # Application capabilities apply only to the peer network, and may be safely
     # manipulated without concern for upgrading orderers.  Set the value of the
     # capability to true to require it.
     Application: &ApplicationCapabilities
+        # V1.4.2 for Application enables the new non-backwards compatible
+        # features and fixes of fabric v1.4.2.
+        V1_4_2: true
         # V1.3 for Application enables the new non-backwards compatible
         # features and fixes of fabric v1.3.
-        V1_3: true
+        V1_3: false
         # V1.2 for Application enables the new non-backwards compatible
         # features and fixes of fabric v1.2 (note, this need not be set if
         # later version capabilities are set)

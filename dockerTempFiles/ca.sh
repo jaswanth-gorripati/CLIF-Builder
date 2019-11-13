@@ -9,7 +9,7 @@ function addCa() {
 if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   ca_${PORG_NAME}:
-    image: hyperledger/fabric-ca:1.4.0
+    image: hyperledger/fabric-ca:1.4.3
     deploy:
       replicas: 1
       restart_policy:
@@ -19,7 +19,7 @@ EOF
 else
 cat << EOF >> ${DTSPATH}
   ca.${PORG_NAME}:
-    image: hyperledger/fabric-ca:1.4.0
+    image: hyperledger/fabric-ca:1.4.3
     container_name: ca-${PORG_NAME}
 EOF
 fi
@@ -34,8 +34,11 @@ cat << EOF >> ${DTSPATH}
       - "${port1}:7054"
     command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.${PORG_NAME}.example.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA_PRIVATE_KEY -b admin:adminpw -d'
     volumes:
+      #- ./fabric-ca-server-config.yaml:/etc/hyperledger/fabric-ca-server/fabric-ca-server-config.yaml
       - ./crypto-config/peerOrganizations/${PORG_NAME}.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
-      #- ./ledger/ca-${PORG_NAME}:/etc/hyperledger/fabric-ca-server
+      - ca.${PORG_NAME}:/etc/hyperledger/fabric-ca-server
+      #- /usr/local/lib/softhsm/libsofthsm2.so:/usr/local/softhsm/libsofthsm2.so
+      #- /var/lib/softhsm/tokens:/var/lib/softhsm/tokens
     networks:
       ${EXTERNAL_NETWORK}:
         aliases:
@@ -43,4 +46,3 @@ cat << EOF >> ${DTSPATH}
 EOF
 }
 #addCa "org1" "1" "0" "byfn" "./ca.yaml"
-#

@@ -108,6 +108,7 @@ function addDockerFile() {
             done
         fi
     fi
+    addCaVolumes $DORG_NAME
     addCa $DORG_NAME $caMNUMBER $EX_NTW ${SELECTED_NETWORK_TYP}
 
     D_IS_COUCH=$7

@@ -68,6 +68,12 @@ function addZookeeperVolumes() {
 EOF
 done
 }
+function addCaVolumes() {
+    D_O_NAME=$1
+   cat << EOF >> ${DTVPATH}
+  ca.${D_O_NAME}:
+EOF
+}
 # addVersion "docker-swarm"
 # addVolumes
 # addCouchVolumes 2 org1

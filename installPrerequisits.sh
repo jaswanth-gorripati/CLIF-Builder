@@ -27,7 +27,8 @@ function install() {
     echo "# Updating package lists"
     sudo apt-add-repository -y ppa:git-core/ppa
     sudo apt-get update
-
+    echo "# Installing Git"
+    sudo apt-get install -y git
     # Install Git
     which git
     if [ $? -eq 0 ];then
@@ -44,7 +45,7 @@ function install() {
     echo "# Installing nvm dependencies"
     sudo apt-get -y install build-essential libssl-dev
 
-
+    sudo apt install curl
     # Execute nvm installation script
     echo "# Executing nvm installation script"
     curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
@@ -56,8 +57,8 @@ function install() {
 
     # Install node
     echo "# Installing nodeJS"
-    nvm install 8
-    nvm use 8
+    nvm install 10
+    nvm use 10
 
     # Ensure that CA certificates are installed
     sudo apt-get -y install apt-transport-https ca-certificates
@@ -87,6 +88,7 @@ function install() {
 
     # Add user account to the docker group
     sudo usermod -aG docker $(whoami)
+    newgrp docker
 
     # Install docker compose
     echo "# Installing Docker-Compose"
@@ -135,59 +137,20 @@ function pullingimages(){
 
         for cn in "${dockerimage[@]}"
         do
-        echo "pulling hyperledger/fabric-${cn} image with verison 1.4.0"
-        docker pull hyperledger/fabric-${cn}:1.4.0
+        echo "pulling hyperledger/fabric-${cn} image with verison 1.4.3"
+        docker pull hyperledger/fabric-${cn}:1.4.3
         done
         declare -a dockerimage1=(kafka zookeeper couchdb baseimage baseos)
 
         for cn in "${dockerimage1[@]}"
         do 
-        echo "pulling hyperledger/fabric-${cn} image with verison 0.4.14"
-        docker pull hyperledger/fabric-${cn}:0.4.14
+        echo "pulling hyperledger/fabric-${cn} image with verison 0.4.15"
+        docker pull hyperledger/fabric-${cn}:0.4.15
         done
         
 }
 
-function composer(){
-    echo "installing the composer cli version of 19 for fabric-1.4.0" 
-    npm install -g composer-cli
-    echo "installing the compose rest-server"
-    npm install -g composer-rest-server
-    echo "installing hyperledger composer"
-    npm install -g generator-hyperledger-composer
-    echo "installing hyperledger yo generator"
-    npm install -g yo
-}
-
-
-function composertools(){
-   
-    node --version
-    if [ $? == 0 ] 
-    then
-    composer
-    else
-    nvm --version
-    if [$? == 0 ]
-    then 
-    echo "listing the avaliable nvm version list"
-    nvm ls |grep 8.14.1
-    if [$? == 0 ]
-    then 
-    nvm use v8.14.1
-    composer
-    fi
-    else 
-        echo "please install the nvm version 5.6"
-        echo "we cannot proceed furture!! i am sorry for this"
-    fi 
-    fi 
-
-}
-
 install
 pullingimages
-composer
-composertools
 
 
