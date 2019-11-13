@@ -9,12 +9,12 @@
     + Number of peers
     + Storage type ( couchdb / Leveldb )
 +   Number of Channels ( multiple channels support is in development )
-+   Type of Ordering service ( Solo / Kafka)
++   Type of Ordering service ( Solo / Kafka / RAFT )
     + Number of Zookeepers
     + Number of Kafkas
+    + Number of Orderers
 +   Chaincode type
     +   Golang chaincode
-    +   Composer chaincode ( still in development )
 
 ## Running the application  :
 + To run the application Git clone the specific repository and checkout the required fabric version branch, Example : 
