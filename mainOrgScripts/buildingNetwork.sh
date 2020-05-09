@@ -139,6 +139,11 @@ installChaincodeWithRetry () {
 	echo "===================== Chaincode Package is installed on peer${peer}.${DOMAIN}.exapmle.com ===================== "
 	echo
 }
+packageChaincode() {
+    setGlobals $1
+    set -x
+    peer lifecycle chaincode package ${CC_NAME}.tar.gz -p /opt/gopath/src/${CC_SRC_PATH} -l ${LANGUAGE} --label ${CC_NAME}_${CC_VERSION}
+}
 approveFromOrgWithRetry () {
     setGlobals $1
     set -x
@@ -270,6 +275,8 @@ elif [ "$IS_INSTALL" == "true" ]; then
         peer=$(expr $peer + 1)
     done
 elif [ "$IS_INSTALL" == "approve" ]; then
+	approveFromOrgWithRetry 0
+elif [ "$IS_INSTALL" == "pkg" ]; then
 	approveFromOrgWithRetry 0
 else
 # Channel creation 

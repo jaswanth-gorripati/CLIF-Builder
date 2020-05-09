@@ -400,7 +400,7 @@ function deployCC() {
   CC_LANG=$1
 
   echo -e "${BROWN}Packaging Chaincode ${NC}"
-  packageCC ${CHANNELS[0,0]} ${T_ORGS[0]} $CC_NAME $CC_VRSN $CC_PAT $CC_LANG
+  packageCC ${CHANNELS[0,0]} ${T_ORGS[0]} $CC_NAME $CC_VRSN $CC_PATH $CC_LANG
   
   echo -e "${BROWN}Installing Chaincode Package${NC}"
   installPackage ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG true

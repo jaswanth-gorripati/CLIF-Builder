@@ -109,8 +109,9 @@ function packageCC() {
     fi
     echo '##########################################'
     echo '# Packaging Chaincode'
-    echo '##########################################'  
-    docker exec $CLI_CC peer lifecycle chaincode package ${CC_NAME}.tar.gz -p /opt/gopath/src/${CC_S_P} -l ${C_LANG} --label ${CC_NAME}_${CC_VER}
+    echo '##########################################' 
+    echo "${NC}+ peer lifecycle chaincode package ${CC_NAME}.tar.gz -p /opt/gopath/src/${CC_S_P} -l ${C_LANG} --label ${CC_NAME}_${CC_VER}"
+    docker exec -ti $CLI_CC peer lifecycle chaincode package ${CC_NAME}.tar.gz -p /opt/gopath/src/${CC_S_P} -l ${C_LANG} --label ${CC_NAME}_${CC_VER}
     if [ $? -ne 0 ]; then
         echo "ERROR !!!! failed To generate Chaincode Package"
         exit 1
