@@ -121,6 +121,7 @@ updateAnchorWithRetry () {
 installChaincodeWithRetry () {
     setGlobals $1 
     set -x
+    #go get github.com/hyperledger/fabric-chaincode-go/shim
 	peer lifecycle chaincode install ${CC_NAME}.tar.gz >log.txt
 	res=$?
     set +x
@@ -171,6 +172,7 @@ commitChaincode() {
 	echo
 }
 invokeCommitChaincode() {
+    sleep 10
      setGlobals $1
     set -x
     peer chaincode invoke -o ${ORDR_ADRS}.example.com:7050 --ordererTLSHostnameOverride ${ORDR_ADRS}.example.com --tls true --cafile $ORDERER_CA --channelID ${CHANNEL_NAME} --name ${CC_NAME} $PEERCONN  --isInit  -c '{"function":"initLedger","Args":[]}'
@@ -228,17 +230,23 @@ chainQuery () {
 }
 
 echo "IS_INSTANT= ${IS_INSTANT}"
-if [ $IS_INSTANT == true ]; then
+if [ "$IS_INSTANT" == "true" ]; then
     #Instantiation 
     echo -e "${GREEN}"
-    echo "========== Deploying Chaincode on ${CHANNEL_NAME} STARTED ========="
+    echo "========== Commiting Chaincode on ${CHANNEL_NAME} STARTED ========="
     echo -e "${NC}"
     # sleep 5
     # instantiatedWithRetry 0
     # sleep 20
     #
     commitChaincode 0
+
+    echo -e "${GREEN}"
+    echo "========== Invoking INIT Chaincode on ${CHANNEL_NAME} ========="
+    echo -e "${NC}"
+
     invokeCommitChaincode 0
+
     # Query 
     echo -e "${GREEN}"
     echo "========== Attempting to Query peer0.${DOMAIN}.exapmle.com ...$(($(date +%s)-starttime)) secs =========="

@@ -398,15 +398,36 @@ deployCC $CC_TYPE_SELECTED
 function deployCC() {
   echo $1
   CC_LANG=$1
-  installCCinChannel ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG true
+
+  echo -e "${BROWN}Packaging Chaincode ${NC}"
+  packageCC ${CHANNELS[0,0]} ${T_ORGS[0]} $CC_NAME $CC_VRSN $CC_PAT $CC_LANG
+  
+  echo -e "${BROWN}Installing Chaincode Package${NC}"
+  installPackage ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG true
   OCNT=$( expr ${#orgDetails[@]} / 3)
   max=$(expr $OCNT - 1)
   for DP_CNT in `seq 1 $max`
   do
-    installCCinChannel ${CHANNELS[0,0]} ${T_ORGS[$DP_CNT]} ${orgDetails[$DP_CNT,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG false ${ORGS_SSH[${orgDetails[$DP_CNT,0]}]}
+    installPackage ${CHANNELS[0,0]} ${T_ORGS[$DP_CNT]} ${orgDetails[$DP_CNT,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG false ${T_ORGS[0]} ${ORGS_SSH[${orgDetails[$DP_CNT,0]}]}
   done
-  echo -e "${BROWN} INSTANTIATING CHAINCODE NOW${NC}"
-  instantiateChainIntoChannel ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} ${PLC} $CC_NAME $CC_VRSN $CC_PATH $CC_LANG
+
+  echo -e "${BROWN}Approving Chaincode Package${NC}"
+  approvePackage ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG true
+  parsePeerConnectionParameters ${T_ORGS[$DP_CNT]} $SELECTED_NETWORK_TYPE true
+  echo $PEER_CONN_PARMS
+  sleep 3
+  OCNT=$( expr ${#orgDetails[@]} / 3)
+  max=$(expr $OCNT - 1)
+  for DP_CNT in `seq 1 $max`
+  do
+    approvePackage ${CHANNELS[0,0]} ${T_ORGS[$DP_CNT]} ${orgDetails[$DP_CNT,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG false ${ORGS_SSH[${orgDetails[$DP_CNT,0]}]}
+    parsePeerConnectionParameters ${T_ORGS[$DP_CNT]} $SELECTED_NETWORK_TYPE false ${T_ORGS[0]} ${ORGS_SSH[${orgDetails[$DP_CNT,0]}]}
+    echo $PEER_CONN_PARMS
+    sleep 3
+  done
+
+  echo -e "${BROWN} Deploying  CHAINCODE NOW${NC}"
+  commitChaincode ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} $CC_NAME $CC_VRSN $CC_PATH $CC_LANG
   echo -e "${BROWN}"
   echo -e "************ ${GREEN} NETWORK SETUP IS DONE ... THANK YOU FOR USING${BROWN} ************${NC}"
   echo " "
@@ -640,9 +661,9 @@ function select_opt {
   local result=$?
   echo $result
 }
-userChoice=$(select_opt "CLIF deployer for fabric version 1.4.3" "CONTINUE" "NO ( want other version )" )
+userChoice=$(select_opt "CLIF deployer for fabric version 2.1.0" "CONTINUE" "NO ( want other version )" )
 # clear
 case "$userChoice" in
-  0) networkSelected "v1.4.3";;
+  0) networkSelected "v2.1.0";;
   1) echo "";echo -e "${RED} For other version try ${BROWN} git checkout clif-<vesion>${NC}"; echo -e "${BROWN}example:${RED} git checkout clif-v1.1${NC}";echo "";;
 esac

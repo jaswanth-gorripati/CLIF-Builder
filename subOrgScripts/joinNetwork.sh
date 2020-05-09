@@ -54,6 +54,7 @@ joinChannelWithRetry () {
 installChaincode () {
 	setGlobals $1
         set -x
+	#go get github.com/hyperledger/fabric-chaincode-go/shim
 	peer lifecycle chaincode install ${CHAINCODENAME}.tar.gz >&log.txt
 	res=$?
         set +x

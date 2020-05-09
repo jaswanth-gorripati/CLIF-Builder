@@ -53,7 +53,7 @@ function deployNetwork() {
     echo -e "${RED}CONTAINER NOT found !!! ${NC}"
     exit 1
     fi
-    docker exec ${CLI_CONTAINER} ./buildingNetwork.sh $CH_NME $D_NME $P_CT false
+    docker exec ${CLI_CONTAINER} ./buildingNetwork.sh $CH_NME $D_NME $P_CT "false"
     if [ $? -ne 0 ]; then
         echo "ERROR !!!! failed"
         exit 1
@@ -72,7 +72,7 @@ function installCCinChannel() {
     isMain=$9
     if [ ${isMain} == true ];then
         CLI_CC=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
-        docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT false "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG true
+        docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT "false" "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG "true"
     else
         if [ "$DD_type" == "Docker-swarm-m" ]; then
             SSH_dORG=${10}
@@ -101,8 +101,8 @@ function packageCC() {
     CLI_CC=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
     echo '##########################################'
     echo '# Installing Build Tools'
-    echo '##########################################'    
-    docker exec $CLI_CC go get github.com/hyperledger/fabric-chaincode-go/shim
+    echo '##########################################'   
+    #docker exec $CLI_CC go get github.com/hyperledger/fabric-chaincode-go/shim
     if [ $? -ne 0 ]; then
         echo "ERROR !!!! failed to get build toools"
         exit 1
@@ -130,7 +130,7 @@ function installPackage() {
     M_ORG=${10}
     if [ ${isMain} == true ];then
         CLI_CC=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
-        docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT false "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG true
+        docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT "false" "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG "true"
         # docker exec $CLI_CC peer lifecycle chaincode install ${CC_NAME}.tar.gz
         docker cp ${CLI_CC}:/opt/gopath/src/github.com/hyperledger/fabric/peer/${CC_NAME}.tar.gz ~/CLIF/${D_NME}/${CC_NAME}.tar.gz
     else
@@ -139,8 +139,7 @@ function installPackage() {
             INS_CNTR_ID=$(ssh $SSH_dORG docker ps|grep ${D_NME}_cli|awk '{print $1}')
             echo $INS_CNTR_ID
             scp -r ~/CLIF/${M_ORG}/${CC_NAME}.tar.gz ${INS_CNTR_ID}:./CLIF/${D_NME}/${CC_NAME}.tar.gz
-            # ssh $SSH_dORG docker exec ${INS_CNTR_ID} peer lifecycle chaincode install ${CC_NAME}.tar.gz
-             ssh $SSH_dORG /bin/bash << EOF
+            ssh $SSH_dORG /bin/bash << EOF
 cd ./CLIF/${D_NME}/;
 ./dockerSetup.sh "installCC" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
 EOF
@@ -164,27 +163,26 @@ function approvePackage() {
     CC_S_P=$7
     C_LANG=$8
     isMain=$9
-    M_ORG=${10}
     if [ ${isMain} == true ];then
         CLI_CC=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
-        docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT false "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG "true"
+        docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT "false" "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG "approve"
         # docker exec $CLI_CC peer lifecycle chaincode install ${CC_NAME}.tar.gz
         docker cp ${CLI_CC}:/opt/gopath/src/github.com/hyperledger/fabric/peer/${CC_NAME}.tar.gz ~/CLIF/${D_NME}/${CC_NAME}.tar.gz
     else
         if [ "$DD_type" == "Docker-swarm-m" ]; then
-            SSH_dORG=${11}
+            SSH_dORG=${10}
             INS_CNTR_ID=$(ssh $SSH_dORG docker ps|grep ${D_NME}_cli|awk '{print $1}')
             echo $INS_CNTR_ID
-            scp -r ~/CLIF/${M_ORG}/${CC_NAME}.tar.gz ${SSH_dORG}:./CLIF/${D_NME}/${CC_NAME}.tar.gz
+            #scp -r ~/CLIF/${M_ORG}/${CC_NAME}.tar.gz ${SSH_dORG}:./CLIF/${D_NME}/${CC_NAME}.tar.gz
             # ssh $SSH_dORG docker exec ${INS_CNTR_ID} peer lifecycle chaincode install ${CC_NAME}.tar.gz
              ssh $SSH_dORG /bin/bash << EOF
 cd ./CLIF/${D_NME}/;
-./dockerSetup.sh "installCC" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
+./dockerSetup.sh "approve" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
 EOF
         else
             cr=$PWD
             cd ~/CLIF/${D_NME}/;
-            ./dockerSetup.sh "installCC" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
+            ./dockerSetup.sh "approve" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
             cd $cr
         fi
     fi
@@ -228,15 +226,13 @@ commitChaincode() {
     CH_NME=$1
     D_NME=$2
     P_CT=$3
-    DD_type=$4
-    CC_NAME=$5
-    CC_VER=$6
-    CC_S_P=$7
-    C_LANG=$8
+    CC_NAME=$4
+    CC_VER=$5
+    CC_S_P=$6
+    C_LANG=$7
     CLI_CC=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
-    docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT false "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG true
+    docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT "true" "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG
     # docker exec $CLI_CC peer lifecycle chaincode install ${CC_NAME}.tar.gz
-    docker cp ${CLI_CC}:/opt/gopath/src/github.com/hyperledger/fabric/peer/${CC_NAME}.tar.gz ~/CLIF/${D_NME}/${CC_NAME}.tar.gz
 }
 function instantiateChainIntoChannel() {
     echo $@
