@@ -146,6 +146,7 @@ cd ./CLIF/${D_NME}/;
 EOF
         else
             cr=$PWD
+            cp -r ~/CLIF/${M_ORG}/${CC_NAME}.tar.gz ~/CLIF/${D_NME}/${CC_NAME}.tar.gz
             cd ~/CLIF/${D_NME}/;
             ./dockerSetup.sh "installCC" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
             cd $cr
@@ -197,7 +198,7 @@ parsePeerConnectionParameters() {
     M_ORG=$4 
     if [ ${isMain} == true ];then
         PEER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto-config/peerOrganizations/${D_NME}.example.com/peers/peer0.${D_NME}.example.com/tls/ca.crt
-        PEER_CONN_PARMS="$PEER_CONN_PARMS --peerAddresses peero.${D_NME}.example.com:7051"
+        PEER_CONN_PARMS="$PEER_CONN_PARMS --peerAddresses peer0.${D_NME}.example.com:7051"
         ## Set path to TLS certificate
         TLSINFO=$(eval echo "--tlsRootCertFiles \$PEER_CA")
         PEER_CONN_PARMS="$PEER_CONN_PARMS $TLSINFO"
@@ -208,14 +209,14 @@ parsePeerConnectionParameters() {
             echo $INS_CNTR_ID
             scp -r ${SSH_dORG}:./CLIF/${D_NME}/crypto-config/peerOrganizations/${D_NME}.example.com ~/CLIF/${M_ORG}/crypto-config/peerOrganizations/${D_NME}.example.com
             PEER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto-config/peerOrganizations/${D_NME}.example.com/peers/peer0.${D_NME}.example.com/tls/ca.crt
-            PEER_CONN_PARMS="$PEER_CONN_PARMS --peerAddresses peero.${D_NME}.example.com:7051"
+            PEER_CONN_PARMS="$PEER_CONN_PARMS --peerAddresses peer0.${D_NME}.example.com:7051"
             ## Set path to TLS certificate
             TLSINFO=$(eval echo "--tlsRootCertFiles \$PEER_CA")
             PEER_CONN_PARMS="$PEER_CONN_PARMS $TLSINFO"
         else
             cp -rf ~/CLIF/${D_NME}/crypto-config/peerOrganizations/${D_NME}.example.com ~/CLIF/${M_ORG}/crypto-config/peerOrganizations/${D_NME}.example.com
-            PEER_CA= /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto-config/peerOrganizations/${D_NME}.example.com/peers/peer0.${D_NME}.example.com/tls/ca.crt
-            PEER_CONN_PARMS="$PEER_CONN_PARMS --peerAddresses peero.${D_NME}.example.com:7051"
+            PEER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto-config/peerOrganizations/${D_NME}.example.com/peers/peer0.${D_NME}.example.com/tls/ca.crt
+            PEER_CONN_PARMS="$PEER_CONN_PARMS --peerAddresses peer0.${D_NME}.example.com:7051"
             ## Set path to TLS certificate
             TLSINFO=$(eval echo "--tlsRootCertFiles \$PEER_CA")
             PEER_CONN_PARMS="$PEER_CONN_PARMS $TLSINFO"

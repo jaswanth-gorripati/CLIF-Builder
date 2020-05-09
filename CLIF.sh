@@ -413,15 +413,15 @@ function deployCC() {
 
   echo -e "${BROWN}Approving Chaincode Package${NC}"
   approvePackage ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG true
-  parsePeerConnectionParameters ${T_ORGS[$DP_CNT]} $SELECTED_NETWORK_TYPE true
+  parsePeerConnectionParameters ${T_ORGS[0]} $SELECTED_NETWORK_TYPE true
   echo $PEER_CONN_PARMS
   sleep 3
-  OCNT=$( expr ${#orgDetails[@]} / 3)
-  max=$(expr $OCNT - 1)
-  for DP_CNT in `seq 1 $max`
+  OCNTn=$( expr ${#orgDetails[@]} / 3)
+  maxc=$(expr $OCNTn - 1)
+  for DP_CNTn in `seq 1 $maxc`
   do
-    approvePackage ${CHANNELS[0,0]} ${T_ORGS[$DP_CNT]} ${orgDetails[$DP_CNT,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG false ${ORGS_SSH[${orgDetails[$DP_CNT,0]}]}
-    parsePeerConnectionParameters ${T_ORGS[$DP_CNT]} $SELECTED_NETWORK_TYPE false ${T_ORGS[0]} ${ORGS_SSH[${orgDetails[$DP_CNT,0]}]}
+    approvePackage ${CHANNELS[0,0]} ${T_ORGS[$DP_CNTn]} ${orgDetails[$DP_CNTn,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG false ${ORGS_SSH[${orgDetails[$DP_CNTn,0]}]}
+    parsePeerConnectionParameters ${T_ORGS[$DP_CNTn]} $SELECTED_NETWORK_TYPE false ${T_ORGS[0]} ${ORGS_SSH[${orgDetails[$DP_CNTn,0]}]}
     echo $PEER_CONN_PARMS
     sleep 3
   done

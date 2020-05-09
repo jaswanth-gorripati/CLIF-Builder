@@ -25,9 +25,7 @@ MAX_RETRY=5
 INS_RETRY=3
 CCR=1
 ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/${ORDR_ADRS}.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
-echo -e "${GREEN}"
-echo "Building Initial channel and adding An Organisation"
-echo -e "${NC}"
+
 
 setGlobals () {
 	PEER=$1
@@ -78,6 +76,9 @@ joinChannelWithRetry () {
 	verifyResult $res "After $MAX_RETRY attempts, peer${peer}.${DOMAIN}.exapmle.com has failed to Join the Channel"
 }
 createChannelWithRetry () {
+    echo -e "${GREEN}"
+    echo "Building Initial channel and adding An Organisation"
+    echo -e "${NC}"
     setGlobals 0
     set -x
     peer channel create -o $ORDR_ADRS.example.com:7050 -c $CHANNEL_NAME -f ./$CHANNEL_NAME.tx --tls --cafile $ORDERER_CA >log.tx
