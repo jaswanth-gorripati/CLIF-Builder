@@ -6,13 +6,14 @@ function addPeer() {
     AddNumber=$3
     port1=$(expr 7051 + $3)
     port2=$(expr 7053 + $3)
+    port3=$(expr 7052 + $3)
     EXTERNAL_NETWORK=$4
     couchdb=$5
     d_type="$6"
 if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   peer${P_ID}_${PORG_NAME}:
-    image: hyperledger/fabric-peer:1.4.3
+    image: hyperledger/fabric-peer:2.1.0
     deploy:
       replicas: 1
       restart_policy:
@@ -22,7 +23,7 @@ EOF
 else
 cat << EOF >> ${DTSPATH}
   peer${P_ID}.${PORG_NAME}.example.com:
-    image: hyperledger/fabric-peer:1.4.3
+    image: hyperledger/fabric-peer:2.1.0
     container_name: peer${P_ID}.${PORG_NAME}.example.com
 EOF
 fi
@@ -45,6 +46,8 @@ fi
 cat << EOF >> ${DTSPATH}
       #- FABRIC_LOGGING_SPEC=INFO
       - FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_CHAINCODEADDRESS=peer${P_ID}.${PORG_NAME}.example.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
       - CORE_CHAINCODE_STARTUPTIMEOUT=1200s
       - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
       - CORE_PEER_TLS_ENABLED=true
@@ -76,6 +79,7 @@ cat << EOF >> ${DTSPATH}
     ports:
       - "${port1}:7051"
       - "${port2}:7053"
+      - "${port3}:7052"
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: peer node start
 EOF
