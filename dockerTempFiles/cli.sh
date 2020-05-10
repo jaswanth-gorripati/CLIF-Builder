@@ -8,7 +8,7 @@ function addCli() {
 if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   ${PORG_NAME}_cli:
-    image: hyperledger/fabric-tools:1.4.3
+    image: hyperledger/fabric-tools:2.1.0
     deploy:
       replicas: 1
       resources:
@@ -22,7 +22,7 @@ EOF
 else
 cat << EOF >> ${DTSPATH}
   ${PORG_NAME}_cli:
-    image: hyperledger/fabric-tools:1.4.3
+    image: hyperledger/fabric-tools:2.1.0
     container_name: ${PORG_NAME}_cli
 EOF
 fi

@@ -15,6 +15,7 @@ CC_SRC_PATH="$8"
 P_CNT=$4
 echo $VERSION
 echo $@
+ORDR_ADRS=orderer0
 DELAY=5
 # verify the result of the end-to-end test
 verifyResult () {
@@ -53,7 +54,8 @@ joinChannelWithRetry () {
 installChaincode () {
 	setGlobals $1
         set -x
-	peer chaincode install -n $CHAINCODENAME -v ${VERSION} -l $LANGUAGE -p ${CC_SRC_PATH} >&log.txt
+	#go get github.com/hyperledger/fabric-chaincode-go/shim
+	peer lifecycle chaincode install ${CHAINCODENAME}.tar.gz >&log.txt
 	res=$?
         set +x
 	cat log.txt
@@ -70,7 +72,30 @@ installChaincode () {
 	echo "===================== Chaincode is installed on peer$1.${DOMAIN}.example.com ===================== "
 	echo
 }
-if [ $IS_INSTALL == true ]; then
+approveFromOrgWithRetry () {
+    setGlobals $1
+    set -x
+    peer lifecycle chaincode queryinstalled >&pkg.txt
+    PACKAGE_ID=$(sed -n "/${CHAINCODENAME}_${VERSION}/{s/^Package ID: //; s/, Label:.*$//; p;}" pkg.txt)
+    echo "package ID : ${PACKAGE_ID}"
+	peer lifecycle chaincode approveformyorg -o ${ORDR_ADRS}.example.com:7050 --ordererTLSHostnameOverride ${ORDR_ADRS}.example.com --tls true --cafile $ORDERER_CA --channelID ${CHANNEL_NAME} --name ${CHAINCODENAME} --version ${VERSION} --init-required --package-id ${PACKAGE_ID} --sequence 1
+	res=$?
+    set +x
+     if [ $res -ne 0 -a $COUNTER -lt $MAX_RETRY ]; then
+		COUNTER=` expr $COUNTER + 1`
+		echo "Approving Chaincode Packagefrom ${DOMAIN} has Failed, Retry after $DELAY seconds"
+		sleep $DELAY
+		approveFromOrgWithRetry 1 
+        return
+	else
+		COUNTER=1
+	fi
+	verifyResult $res "Approving Chaincode Package from ${DOMAIN} has Failed"
+	echo "===================== Chaincode Package is Approved form ${DOMAIN} organisation===================== "
+	echo
+}
+	
+if [ "$IS_INSTALL" == "true" ]; then
 	peersToJoin=0
 	echo "${peersToJoin}"
 	echo $P_CNT
@@ -82,6 +107,8 @@ if [ $IS_INSTALL == true ]; then
 		peersToJoin=$(expr $peersToJoin + 1)
 		echo $peersToJoin
 	done
+elif [ "$IS_INSTALL" == "approve" ]; then
+	approveFromOrgWithRetry 0
 else
 	set -x
 	peer channel fetch 0 ${CHANNEL_NAME}.block -o $ORDERER_NAME.example.com:7050 -c $CHANNEL_NAME --tls --cafile $ORDERER_CA

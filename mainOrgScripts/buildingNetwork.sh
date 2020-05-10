@@ -16,6 +16,7 @@ CC_VERSION="$7"
 CC_SRC_PATH="$8"
 LANGUAGE="$9"
 IS_INSTALL=${10}
+PEERCONN=$(echo $@|awk '{print substr($0, index($0, $11))}')
 ORDR_ADRS=orderer0
 DELAY="3"
 TIMEOUT="10"
@@ -24,9 +25,7 @@ MAX_RETRY=5
 INS_RETRY=3
 CCR=1
 ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/${ORDR_ADRS}.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
-echo -e "${GREEN}"
-echo "Building Initial channel and adding An Organisation"
-echo -e "${NC}"
+
 
 setGlobals () {
 	PEER=$1
@@ -77,6 +76,9 @@ joinChannelWithRetry () {
 	verifyResult $res "After $MAX_RETRY attempts, peer${peer}.${DOMAIN}.exapmle.com has failed to Join the Channel"
 }
 createChannelWithRetry () {
+    echo -e "${GREEN}"
+    echo "Building Initial channel and adding An Organisation"
+    echo -e "${NC}"
     setGlobals 0
     set -x
     peer channel create -o $ORDR_ADRS.example.com:7050 -c $CHANNEL_NAME -f ./$CHANNEL_NAME.tx --tls --cafile $ORDERER_CA >log.tx
@@ -120,21 +122,69 @@ updateAnchorWithRetry () {
 installChaincodeWithRetry () {
     setGlobals $1 
     set -x
-	peer chaincode install -n ${CC_NAME} -v ${CC_VERSION} -l ${LANGUAGE} -p ${CC_SRC_PATH} >&log.txt
+    #go get github.com/hyperledger/fabric-chaincode-go/shim
+	peer lifecycle chaincode install ${CC_NAME}.tar.gz >log.txt
 	res=$?
     set +x
 	cat log.txt
     if [ $res -ne 0 -a $COUNTER -lt $MAX_RETRY ]; then
 		COUNTER=` expr $COUNTER + 1`
-		echo "Chaincode installation on peer${peer}.${DOMAIN}.exapmle.com has Failed, Retry after $DELAY seconds"
+		echo "Chaincode Package installation on peer${peer}.${DOMAIN}.exapmle.com has Failed, Retry after $DELAY seconds"
 		sleep $DELAY
 		installChaincodeWithRetry $peer 
         return
 	else
 		COUNTER=1
 	fi
-	verifyResult $res "Chaincode installation on peer${peer}.${DOMAIN}.exapmle.com has Failed"
-	echo "===================== Chaincode is installed on peer${peer}.${DOMAIN}.exapmle.com ===================== "
+	verifyResult $res "Chaincode Package installation on peer${peer}.${DOMAIN}.exapmle.com has Failed"
+	echo "===================== Chaincode Package is installed on peer${peer}.${DOMAIN}.exapmle.com ===================== "
+	echo
+}
+packageChaincode() {
+    setGlobals $1
+    set -x
+    peer lifecycle chaincode package ${CC_NAME}.tar.gz -p /opt/gopath/src/${CC_SRC_PATH} -l ${LANGUAGE} --label ${CC_NAME}_${CC_VERSION}
+}
+approveFromOrgWithRetry () {
+    setGlobals $1
+    set -x
+    peer lifecycle chaincode queryinstalled >&pkg.txt
+    PACKAGE_ID=$(sed -n "/${CC_NAME}_${CC_VERSION}/{s/^Package ID: //; s/, Label:.*$//; p;}" pkg.txt)
+	peer lifecycle chaincode approveformyorg -o ${ORDR_ADRS}.example.com:7050 --ordererTLSHostnameOverride ${ORDR_ADRS}.example.com --tls true --cafile $ORDERER_CA --channelID ${CHANNEL_NAME} --name ${CC_NAME} --version ${CC_VERSION} --init-required --package-id ${PACKAGE_ID} --sequence 1
+	res=$?
+    set +x
+    if [ $res -ne 0 -a $COUNTER -lt $MAX_RETRY ]; then
+		COUNTER=` expr $COUNTER + 1`
+		echo "Approving Chaincode Packagefrom ${DOMAIN} has Failed, Retry after $DELAY seconds"
+		sleep $DELAY
+		approveFromOrgWithRetry 1 
+        return
+	else
+		COUNTER=1
+	fi
+	verifyResult $res "Approving Chaincode Package from ${DOMAIN} has Failed"
+	echo "===================== Chaincode Package is Approved form ${DOMAIN} organisation ===================== "
+	echo
+}
+commitChaincode() {
+    setGlobals $1
+    set -x
+    peer lifecycle chaincode commit -o ${ORDR_ADRS}.example.com:7050 --ordererTLSHostnameOverride ${ORDR_ADRS}.example.com --tls true --cafile $ORDERER_CA --channelID ${CHANNEL_NAME} --name ${CC_NAME} ${PEERCONN} --version  ${CC_VERSION} --sequence 1 --init-required
+    res=$?
+    set +x
+	verifyResult $res "Commiting Chaincode Package from ${DOMAIN} has Failed"
+	echo "===================== Chaincode Package  has been commited form ${DOMAIN} organisation ===================== "
+	echo
+}
+invokeCommitChaincode() {
+    sleep 5
+    setGlobals 0
+    set -x
+    peer chaincode invoke -o ${ORDR_ADRS}.example.com:7050 --ordererTLSHostnameOverride ${ORDR_ADRS}.example.com --tls true --cafile $ORDERER_CA --channelID ${CHANNEL_NAME} --name ${CC_NAME} ${PEERCONN} --isInit  -c '{"function":"initLedger","Args":[]}'
+    res=$?
+    set +x
+	verifyResult $res "Init Commited Chaincode Package from ${DOMAIN} has Failed"
+	echo "===================== Init Commited Chaincode Package  has been successfull form ${DOMAIN} organisation ===================== "
 	echo
 }
 instantiatedWithRetry () {
@@ -158,60 +208,60 @@ instantiatedWithRetry () {
     echo
 }
 chainQuery () {
-    sleep 10
+    sleep 5
+    setGlobals $1 
     set -x
-    peer chaincode query -C $CHANNEL_NAME -n ${CC_NAME} -c '{"Args":["query","a"]}' >&log.txt
+    peer chaincode query -C $CHANNEL_NAME -n ${CC_NAME} -c '{"Args":["queryAllCars"]}' >&log.txt
     res=$?
     set +x
-    cat log.txt
-    EXPECTED_RESULT=100
     if [ $res -ne 0 -a $COUNTER -lt $INS_RETRY ]; then
 		COUNTER=` expr $COUNTER + 1`
 		echo -e "${RED}Chaincode query on channel '$CHANNEL_NAME' failed, Retry after $DELAY seconds${NC}"
 		sleep $DELAY
-		chainQuery
+		chainQuery 0
         return
     else
         COUNTER=1
     fi
     if [ $res -eq 0 ]; then
-        VALUE=$(cat log.txt)
-        if [ "$VALUE" == "$EXPECTED_RESULT" ]; then
             echo -e "${GREEN}"
-            echo "======= Expected value  -  Returned Value =========="
-            echo "======= ${EXPECTED_RESULT}             -  ${VALUE}            =========="
+            echo "======= Query Output =========="
+            cat log.txt
             echo
-            echo -e "======= SUCCESFULLY INSTANTIATED CHAINCODE ON  CHANNEL ${CHANNEL_NAME} ==========${NC}"
+            echo -e "======= SUCCESFULLY DEPOLYED CHAINCODE ON  CHANNEL ${CHANNEL_NAME} ==========${NC}"
             exit 0
-        else
-            echo -e "${RED}Expected ${EXPECTED_RESULT} but got ${VALUE}"
-            echo "!!!!!!!!!!... FAILED...!!!!!!!!!!${NC}"
-            exit 1
-        fi
     fi
 }
 
 echo "IS_INSTANT= ${IS_INSTANT}"
-if [ $IS_INSTANT == true ]; then
+if [ "$IS_INSTANT" == "true" ]; then
     #Instantiation 
     echo -e "${GREEN}"
-    echo "========== Instantiation on ${CHANNEL_NAME} STARTED ========="
+    echo "========== Commiting Chaincode on ${CHANNEL_NAME} channel ========="
     echo -e "${NC}"
-    sleep 5
-    instantiatedWithRetry 0
-    sleep 20
+    # sleep 5
+    # instantiatedWithRetry 0
+    # sleep 20
     #
+    commitChaincode 0
+
+    echo -e "${GREEN}"
+    echo "========== Invoking INIT Chaincode on ${CHANNEL_NAME} channel ========="
+    echo -e "${NC}"
+
+    invokeCommitChaincode 0
+
     # Query 
     echo -e "${GREEN}"
     echo "========== Attempting to Query peer0.${DOMAIN}.exapmle.com ...$(($(date +%s)-starttime)) secs =========="
     echo -e "${NC}"
-    chainQuery
-elif [ $IS_INSTALL == true ]; then
+    chainQuery 0
+elif [ "$IS_INSTALL" == "true" ]; then
     #Installing chaincode
     #
     # Chaincode installation
     echo -e "${GREEN}"
-    echo "========== Chaincode installation started ========== "
+    echo "========== Chaincode Package installation started ========== "
     echo -e "${NC}"
     #for peer `seq 0 ${P_CNT}`
     peer=0
@@ -223,6 +273,10 @@ elif [ $IS_INSTALL == true ]; then
         echo
         peer=$(expr $peer + 1)
     done
+elif [ "$IS_INSTALL" == "approve" ]; then
+	approveFromOrgWithRetry 0
+elif [ "$IS_INSTALL" == "pkg" ]; then
+	approveFromOrgWithRetry 0
 else
 # Channel creation 
 echo -e "${GREEN}"

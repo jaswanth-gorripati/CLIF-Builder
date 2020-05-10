@@ -44,7 +44,7 @@ function generateChannelArtifacts() {
   echo -e "${NC}"
   # Note: For some unknown reason (at least for now) the block file can't be
   # named orderer.genesis.block or the orderer will fail to launch!
-   configtxgen -profile ${ORDR_PNAME} -outputBlock ./genesis.block
+   configtxgen -profile ${ORDR_PNAME} -channelID syschnl -outputBlock ./genesis.block
   if [ "$?" -ne 0 ]; then
     echo -e "${RED}Failed to generate orderer genesis block...${NC}"
     exit 1

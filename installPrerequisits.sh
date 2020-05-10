@@ -88,6 +88,7 @@ function install() {
 
     # Add user account to the docker group
     sudo usermod -aG docker $(whoami)
+    sleep 2
     newgrp docker
 
     # Install docker compose
@@ -133,20 +134,22 @@ function install() {
 
 function pullingimages(){
 
-        declare -a dockerimage=(ca orderer peer ccenv tools)
+    declare -a dockerimage=(orderer peer ccenv tools)
 
-        for cn in "${dockerimage[@]}"
-        do
-        echo "pulling hyperledger/fabric-${cn} image with verison 1.4.3"
-        docker pull hyperledger/fabric-${cn}:1.4.3
-        done
-        declare -a dockerimage1=(kafka zookeeper couchdb baseimage baseos)
+    docker pull hyperledger/fabric-ca:1.4.6
+    for cn in "${dockerimage[@]}"
+    do
+        echo "pulling hyperledger/fabric-${cn} image with verison 2.1.0"
+        docker pull hyperledger/fabric-${cn}:2.1.0
+    done
+    
+    declare -a dockerimage1=(kafka zookeeper couchdb baseimage baseos)
 
-        for cn in "${dockerimage1[@]}"
-        do 
-        echo "pulling hyperledger/fabric-${cn} image with verison 0.4.15"
-        docker pull hyperledger/fabric-${cn}:0.4.15
-        done
+    for cn in "${dockerimage1[@]}"
+    do 
+        echo "pulling hyperledger/fabric-${cn} image with verison 0.4.18"
+        docker pull hyperledger/fabric-${cn}:0.4.18
+    done
         
 }
 

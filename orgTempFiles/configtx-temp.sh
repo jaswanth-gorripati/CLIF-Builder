@@ -9,9 +9,6 @@ function setOrg() {
 }
 function ctxFile() {
     cat << EOF > $CPWD/${ORG_NAME}/configtx.yaml
-# Copyright IBM Corp. All Rights Reserved.
-#
-# SPDX-License-Identifier: Apache-2.0
 #
 
 ---
@@ -24,9 +21,6 @@ function addOrgTxt() {
 #
 #   Section: Organizations
 #
-#   - This section defines the different organizational identities which will
-#   be referenced later in the configuration.
-#
 ################################################################################
 Organizations:
 EOF
@@ -34,17 +28,9 @@ EOF
 function ctxOrgaizations() {
     addOrgTxt
     cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
-    # SampleOrg defines an MSP using the sampleconfig.  It should never be used
-    # in production but may be used as a template for other definitions
     - &OrdererOrg
-        # DefaultOrg defines the organization which is used in the sampleconfig
-        # of the fabric.git development environment
         Name: OrdererOrg
-
-        # ID to load the MSP definition as
         ID: OrdererMSP
-
-        # MSPDir is the filesystem path which contains the MSP configuration
         MSPDir: crypto-config/ordererOrganizations/example.com/msp
         Policies:
             Readers:
@@ -58,13 +44,8 @@ function ctxOrgaizations() {
                 Rule: "OR('OrdererMSP.admin')"
 
     - &${ORG_NAME}
-        # DefaultOrg defines the organization which is used in the sampleconfig
-        # of the fabric.git development environment
         Name: ${ORG_NAME}MSP
-
-        # ID to load the MSP definition as
         ID: ${ORG_NAME}MSP
-
         MSPDir: crypto-config/peerOrganizations/${ORG_NAME}.example.com/msp
         Policies:
             Readers:
@@ -76,11 +57,10 @@ function ctxOrgaizations() {
             Admins:
                 Type: Signature
                 Rule: "OR('${ORG_NAME}MSP.admin')"
-
+            Endorsement:
+                Type: Signature
+                Rule: "OR('${ORG_NAME}MSP.peer')"
         AnchorPeers:
-            # AnchorPeers defines the location of peers which can be used
-            # for cross org gossip communication.  Note, this value is only
-            # encoded in the genesis block in the Application section context
             - Host: peer0.${ORG_NAME}.example.com
               Port: 7051
 EOF
@@ -91,13 +71,8 @@ ORG_NAME1=$1
 addOrgTxt
 cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
     - &${ORG_NAME1}
-        # DefaultOrg defines the organization which is used in the sampleconfig
-        # of the fabric.git development environment
         Name: ${ORG_NAME1}MSP
-
-        # ID to load the MSP definition as
         ID: ${ORG_NAME1}MSP
-
         MSPDir:  HOME_PATH/CLIF/${ORG_NAME1}/crypto-config/peerOrganizations/${ORG_NAME1}.example.com/msp
         Policies:
             Readers:
@@ -109,11 +84,10 @@ cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
             Admins:
                 Type: Signature
                 Rule: "OR('${ORG_NAME1}MSP.admin')"
-
+            Endorsement:
+                Type: Signature
+                Rule: "OR('${ORG_NAME1}MSP.peer')"
         AnchorPeers:
-            # AnchorPeers defines the location of peers which can be used
-            # for cross org gossip communication.  Note, this value is only
-            # encoded in the genesis block in the Application section context
             - Host: peer0.${ORG_NAME1}.example.com
               Port: 7051
 EOF
@@ -128,25 +102,17 @@ function ctxOrderer() {
 #
 #   SECTION: Orderer
 #
-#   - This section defines the values to encode into a config transaction or
-#   genesis block for orderer related parameters
-#
 ################################################################################
 Orderer: &OrdererDefaults
-
-    # Orderer Type: The orderer implementation to start
-    # Available types are "solo" and "kafka"
 EOF
 if [ "$CTXORDRTYP" == "etcdraft" ]; then
     cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
-    OrdererType: solo
-
+    OrdererType: $CTXORDRTYP
     Addresses:
 EOF
 else
     cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
     OrdererType: ${CTXORDRTYP}
-
     Addresses:
 EOF
 fi
@@ -157,27 +123,12 @@ do
 EOF
 done
     cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
-    # Batch Timeout: The amount of time to wait before creating a batch
     BatchTimeout: 1s
-
-    # Batch Size: Controls the number of messages batched into a block
     BatchSize:
-
-        # Max Message Count: The maximum number of messages to permit in a batch
         MaxMessageCount: 50
-
-        # Absolute Max Bytes: The absolute maximum number of bytes allowed for
-        # the serialized messages in a batch.
         AbsoluteMaxBytes: 99 MB
-
-        # Preferred Max Bytes: The preferred maximum number of bytes allowed for
-        # the serialized messages in a batch. A message larger than the preferred
-        # max bytes will result in a batch larger than preferred max bytes.
         PreferredMaxBytes: 1 MB
-        
     Kafka:
-        # Brokers: A list of Kafka brokers to which the orderer connects
-        # NOTE: Use IP:port notation
         Brokers:
 EOF
 for kf in `seq 0 ${CTX_NO_KFS}`
@@ -187,8 +138,6 @@ do
 EOF
 done
 cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
-    # Organizations is the list of orgs which are defined as participants on
-    # the orderer side of the network
     Organizations:
     Policies:
         Readers:
@@ -200,20 +149,11 @@ cat << EOF >> $CPWD/${ORG_NAME}/configtx.yaml
         Admins:
             Type: ImplicitMeta
             Rule: "MAJORITY Admins"
-        # BlockValidation specifies what signatures must be included in the block
-        # from the orderer for the peer to validate it.
         BlockValidation:
             Type: ImplicitMeta
             Rule: "ANY Writers"
 Application: &ApplicationDefaults
-
-    # Organizations is the list of orgs which are defined as participants on
-    # the application side of the network
     Organizations:
-
-    # Policies defines the set of policies at this level of the config tree
-    # For Application policies, their canonical path is
-    #   /Channel/Application/<PolicyName>
     Policies:
         Readers:
             Type: ImplicitMeta
@@ -224,28 +164,24 @@ Application: &ApplicationDefaults
         Admins:
             Type: ImplicitMeta
             Rule: "MAJORITY Admins"
+        LifecycleEndorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+        Endorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
 
 Channel: &ChannelDefaults
-    # Policies defines the set of policies at this level of the config tree
-    # For Channel policies, their canonical path is
-    #   /Channel/<PolicyName>
     Policies:
-        # Who may invoke the 'Deliver' API
         Readers:
             Type: ImplicitMeta
             Rule: "ANY Readers"
-        # Who may invoke the 'Broadcast' API
         Writers:
             Type: ImplicitMeta
             Rule: "ANY Writers"
-        # By default, who may modify elements at this config level
         Admins:
             Type: ImplicitMeta
             Rule: "MAJORITY Admins"
-
-    # Capabilities describes the channel level capabilities, see the
-    # dedicated Capabilities section elsewhere in this file for a full
-    # description
     Capabilities:
         <<: *ChannelCapabilities
 EOF
@@ -261,12 +197,8 @@ GENESIS_NAME=$4
 #
 #   Profile
 #
-#   - Different configuration profiles may be encoded here to be specified
-#   as parameters to the configtxgen tool
-#
 ################################################################################
 Profiles:
-
     ${GENESIS_NAME}:
         <<: *ChannelDefaults
         Orderer:
@@ -336,6 +268,7 @@ function ctxChannelProfile() {
     ${chDetails}:
         Capabilities:
             <<: *ChannelCapabilities
+        <<: *ChannelDefaults
         Consortium: SampleConsortium
         Application:
             <<: *ApplicationDefaults
@@ -375,85 +308,15 @@ function ctxCapabilities() {
 #
 #   SECTION: Application
 #
-#   - This section defines the values to encode into a config transaction or
-#   genesis block for application related parameters
-#
 ################################################################################
-Application: &ApplicationDefaults
 
-    # Organizations is the list of orgs which are defined as participants on
-    # the application side of the network
-    Organizations:
-
-################################################################################
-#
-#   SECTION: Capabilities
-#
-#   - This section defines the capabilities of fabric network. This is a new
-#   concept as of v1.1.0 and should not be utilized in mixed networks with
-#   v1.0.x peers and orderers.  Capabilities define features which must be
-#   present in a fabric binary for that binary to safely participate in the
-#   fabric network.  For instance, if a new MSP type is added, newer binaries
-#   might recognize and validate the signatures from this type, while older
-#   binaries without this support would be unable to validate those
-#   transactions.  This could lead to different versions of the fabric binaries
-#   having different world states.  Instead, defining a capability for a channel
-#   informs those binaries without this capability that they must cease
-#   processing transactions until they have been upgraded.  For v1.0.x if any
-#   capabilities are defined (including a map with all capabilities turned off)
-#   then the v1.0.x peer will deliberately crash.
-#
-################################################################################
 Capabilities:
-    # Channel capabilities apply to both the orderers and the peers and must be
-    # supported by both.  Set the value of the capability to true to require it.
     Channel: &ChannelCapabilities
-        # V1.4.3 for Channel is a catchall flag for behavior which has been
-        # determined to be desired for all orderers and peers running at the v1.4.3
-        # level, but which would be incompatible with orderers and peers from
-        # prior releases.
-        # Prior to enabling V1.4.3 channel capabilities, ensure that all
-        # orderers and peers on a channel are at v1.4.3 or later.
-        V1_4_3: true
-        # V1.3 for Channel enables the new non-backwards compatible
-        # features and fixes of fabric v1.3
-        V1_3: false
-        # V1.1 for Channel enables the new non-backwards compatible
-        # features and fixes of fabric v1.1
-        V1_1: false
-
-    # Orderer capabilities apply only to the orderers, and may be safely
-    # manipulated without concern for upgrading peers.  Set the value of the
-    # capability to true to require it.
+        V2_0: true
     Orderer: &OrdererCapabilities
-        # V1.4.2 for Orderer is a catchall flag for behavior which has been
-        # determined to be desired for all orderers running at the v1.4.2
-        # level, but which would be incompatible with orderers from prior releases.
-        # Prior to enabling V1.4.2 orderer capabilities, ensure that all
-        # orderers on a channel are at v1.4.2 or later.
-        V1_4_2: true
-        # V1.1 for Orderer enables the new non-backwards compatible
-        # features and fixes of fabric v1.1
-        V1_1: false
-
-    # Application capabilities apply only to the peer network, and may be safely
-    # manipulated without concern for upgrading orderers.  Set the value of the
-    # capability to true to require it.
+        V2_0: true
     Application: &ApplicationCapabilities
-        # V1.4.2 for Application enables the new non-backwards compatible
-        # features and fixes of fabric v1.4.2.
-        V1_4_2: true
-        # V1.3 for Application enables the new non-backwards compatible
-        # features and fixes of fabric v1.3.
-        V1_3: false
-        # V1.2 for Application enables the new non-backwards compatible
-        # features and fixes of fabric v1.2 (note, this need not be set if
-        # later version capabilities are set)
-        V1_2: false
-        # V1.1 for Application enables the new non-backwards compatible
-        # features and fixes of fabric v1.1 (note, this need not be set if
-        # later version capabilities are set).
-        V1_1: false
+        V2_0: true
 EOF
 
 echo -e "${GREEN} Configtx.yaml File for ${ORG_NAME} is generated"

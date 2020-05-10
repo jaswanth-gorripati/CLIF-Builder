@@ -5,6 +5,7 @@ GREEN='\033[0;32m'
 org_pth=""
 EXT_NW=""
 D_STK=""
+PEER_CONN_PARMS=""
 #declare -A orgs
 function sendTokenToOrgs() {
     ./dockerSetup.sh "sendJoinToken" ${orgs[@]}
@@ -52,7 +53,7 @@ function deployNetwork() {
     echo -e "${RED}CONTAINER NOT found !!! ${NC}"
     exit 1
     fi
-    docker exec ${CLI_CONTAINER} ./buildingNetwork.sh $CH_NME $D_NME $P_CT false
+    docker exec ${CLI_CONTAINER} ./buildingNetwork.sh $CH_NME $D_NME $P_CT "false"
     if [ $? -ne 0 ]; then
         echo "ERROR !!!! failed"
         exit 1
@@ -71,7 +72,7 @@ function installCCinChannel() {
     isMain=$9
     if [ ${isMain} == true ];then
         CLI_CC=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
-        docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT false "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG true
+        docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT "false" "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG "true"
     else
         if [ "$DD_type" == "Docker-swarm-m" ]; then
             SSH_dORG=${10}
@@ -88,6 +89,152 @@ EOF
             cd $cr
         fi
     fi
+}
+function packageCC() {
+    echo $@
+    CH_NME=$1
+    D_NME=$2
+    CC_NAME=$3
+    CC_VER=$4
+    CC_S_P=$5
+    C_LANG=$6
+    CLI_CC=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
+    echo '##########################################'
+    echo '# Installing Build Tools'
+    echo '##########################################'   
+    #docker exec $CLI_CC go get github.com/hyperledger/fabric-chaincode-go/shim
+    if [ $? -ne 0 ]; then
+        echo "ERROR !!!! failed to get build toools"
+        exit 1
+    fi
+    echo '##########################################'
+    echo '# Packaging Chaincode'
+    echo '##########################################' 
+    echo "${NC}+ peer lifecycle chaincode package ${CC_NAME}.tar.gz -p /opt/gopath/src/${CC_S_P} -l ${C_LANG} --label ${CC_NAME}_${CC_VER}"
+    docker exec -ti $CLI_CC peer lifecycle chaincode package ${CC_NAME}.tar.gz -p /opt/gopath/src/${CC_S_P} -l ${C_LANG} --label ${CC_NAME}_${CC_VER}
+    if [ $? -ne 0 ]; then
+        echo "ERROR !!!! failed To generate Chaincode Package"
+        exit 1
+    fi
+}
+function installPackage() {
+    echo $@
+    CH_NME=$1
+    D_NME=$2
+    P_CT=$3
+    DD_type=$4
+    CC_NAME=$5
+    CC_VER=$6
+    CC_S_P=$7
+    C_LANG=$8
+    isMain=$9
+    M_ORG=${10}
+    if [ ${isMain} == true ];then
+        CLI_CC=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
+        docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT "false" "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG "true"
+        # docker exec $CLI_CC peer lifecycle chaincode install ${CC_NAME}.tar.gz
+        docker cp ${CLI_CC}:/opt/gopath/src/github.com/hyperledger/fabric/peer/${CC_NAME}.tar.gz ~/CLIF/${D_NME}/${CC_NAME}.tar.gz
+    else
+        if [ "$DD_type" == "Docker-swarm-m" ]; then
+            SSH_dORG=${11}
+            INS_CNTR_ID=$(ssh $SSH_dORG docker ps|grep ${D_NME}_cli|awk '{print $1}')
+            echo $INS_CNTR_ID
+            scp -r ~/CLIF/${M_ORG}/${CC_NAME}.tar.gz ${INS_CNTR_ID}:./CLIF/${D_NME}/${CC_NAME}.tar.gz
+            ssh $SSH_dORG /bin/bash << EOF
+cd ./CLIF/${D_NME}/;
+./dockerSetup.sh "installCC" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
+EOF
+        else
+            cr=$PWD
+            cp -r ~/CLIF/${M_ORG}/${CC_NAME}.tar.gz ~/CLIF/${D_NME}/${CC_NAME}.tar.gz
+            cd ~/CLIF/${D_NME}/;
+            ./dockerSetup.sh "installCC" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
+            cd $cr
+        fi
+    fi
+}
+
+function approvePackage() {
+    echo $@
+    CH_NME=$1
+    D_NME=$2
+    P_CT=$3
+    DD_type=$4
+    CC_NAME=$5
+    CC_VER=$6
+    CC_S_P=$7
+    C_LANG=$8
+    isMain=$9
+    if [ ${isMain} == true ];then
+        CLI_CC=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
+        docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT "false" "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG "approve"
+        # docker exec $CLI_CC peer lifecycle chaincode install ${CC_NAME}.tar.gz
+        docker cp ${CLI_CC}:/opt/gopath/src/github.com/hyperledger/fabric/peer/${CC_NAME}.tar.gz ~/CLIF/${D_NME}/${CC_NAME}.tar.gz
+    else
+        if [ "$DD_type" == "Docker-swarm-m" ]; then
+            SSH_dORG=${10}
+            INS_CNTR_ID=$(ssh $SSH_dORG docker ps|grep ${D_NME}_cli|awk '{print $1}')
+            echo $INS_CNTR_ID
+            #scp -r ~/CLIF/${M_ORG}/${CC_NAME}.tar.gz ${SSH_dORG}:./CLIF/${D_NME}/${CC_NAME}.tar.gz
+            # ssh $SSH_dORG docker exec ${INS_CNTR_ID} peer lifecycle chaincode install ${CC_NAME}.tar.gz
+             ssh $SSH_dORG /bin/bash << EOF
+cd ./CLIF/${D_NME}/;
+./dockerSetup.sh "approveCC" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
+EOF
+        else
+            cr=$PWD
+            cd ~/CLIF/${D_NME}/;
+            ./dockerSetup.sh "approveCC" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
+            cd $cr
+        fi
+    fi
+    
+}
+parsePeerConnectionParameters() {
+    echo $@
+    D_NME=$1
+    DD_type=$2
+    isMain=$3
+    M_ORG=$4 
+    if [ ${isMain} == true ];then
+        PEER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto-config/peerOrganizations/${D_NME}.example.com/peers/peer0.${D_NME}.example.com/tls/ca.crt
+        PEER_CONN_PARMS="$PEER_CONN_PARMS --peerAddresses peer0.${D_NME}.example.com:7051"
+        ## Set path to TLS certificate
+        TLSINFO=$(eval echo "--tlsRootCertFiles \$PEER_CA")
+        PEER_CONN_PARMS="$PEER_CONN_PARMS $TLSINFO"
+    else
+        if [ "$DD_type" == "Docker-swarm-m" ]; then
+            SSH_dORG=${5}
+            INS_CNTR_ID=$(ssh $SSH_dORG docker ps|grep ${D_NME}_cli|awk '{print $1}')
+            echo $INS_CNTR_ID
+            scp -r ${SSH_dORG}:./CLIF/${D_NME}/crypto-config/peerOrganizations/${D_NME}.example.com ~/CLIF/${M_ORG}/crypto-config/peerOrganizations/${D_NME}.example.com
+            PEER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto-config/peerOrganizations/${D_NME}.example.com/peers/peer0.${D_NME}.example.com/tls/ca.crt
+            PEER_CONN_PARMS="$PEER_CONN_PARMS --peerAddresses peer0.${D_NME}.example.com:7051"
+            ## Set path to TLS certificate
+            TLSINFO=$(eval echo "--tlsRootCertFiles \$PEER_CA")
+            PEER_CONN_PARMS="$PEER_CONN_PARMS $TLSINFO"
+        else
+            cp -rf ~/CLIF/${D_NME}/crypto-config/peerOrganizations/${D_NME}.example.com ~/CLIF/${M_ORG}/crypto-config/peerOrganizations/${D_NME}.example.com
+            PEER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto-config/peerOrganizations/${D_NME}.example.com/peers/peer0.${D_NME}.example.com/tls/ca.crt
+            PEER_CONN_PARMS="$PEER_CONN_PARMS --peerAddresses peer0.${D_NME}.example.com:7051"
+            ## Set path to TLS certificate
+            TLSINFO=$(eval echo "--tlsRootCertFiles \$PEER_CA")
+            PEER_CONN_PARMS="$PEER_CONN_PARMS $TLSINFO"
+        fi
+    fi  
+}
+commitChaincode() {
+     echo $@
+    CH_NME=$1
+    D_NME=$2
+    P_CT=$3
+    CC_NAME=$4
+    CC_VER=$5
+    CC_S_P=$6
+    C_LANG=$7
+    CLI_CC=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
+    docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT "true" "nopolicy" $CC_NAME $CC_VER $CC_S_P $C_LANG "false" $PEER_CONN_PARMS
+    # docker exec $CLI_CC peer lifecycle chaincode install ${CC_NAME}.tar.gz
 }
 function instantiateChainIntoChannel() {
     echo $@
@@ -111,6 +258,7 @@ function instantiateChainIntoChannel() {
         exit 1
     fi
 }
+
 function runMainNetwork() {
     echo $@
     org_pth=$1

@@ -17,18 +17,9 @@ function gFolder() {
 
 function gCryptoOrderer() {
     cat << EOF > $CPWD/${ORG_NAME}/crypto-config.yaml
-# ---------------------------------------------------------------------------
-# "OrdererOrgs" - Definition of organizations managing orderer nodes
-# ---------------------------------------------------------------------------
 OrdererOrgs:
-  # ---------------------------------------------------------------------------
-  # Orderer
-  # ---------------------------------------------------------------------------
   - Name: Orderer
     Domain: example.com
-    # ---------------------------------------------------------------------------
-    # "Specs" - See PeerOrgs below for complete description
-    # ---------------------------------------------------------------------------
     Specs:
 EOF
 if [ "${ORDR_TYPE}" != "SOLO" ]; then
@@ -59,16 +50,12 @@ function gCryptoPeers() {
         gCryptoOrderer
     fi
     cat << EOF >> $CPWD/${ORG_NAME}/crypto-config.yaml
-# ---------------------------------------------------------------------------
-# "PeerOrgs" - Definition of organizations managing peer nodes
-# ---------------------------------------------------------------------------
 PeerOrgs:
-  # ---------------------------------------------------------------------------
-  # ${ORG_NAME}
-  # ---------------------------------------------------------------------------
   - Name: ${ORG_NAME}
     Domain: ${ORG_NAME}.example.com
     EnableNodeOUs: true
+    SANS:
+      - 0.0.0.0
     Template:
       Count: ${NO_OF_PEERS}
     Users:
