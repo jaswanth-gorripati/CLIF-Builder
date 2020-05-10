@@ -16,7 +16,7 @@ CC_VERSION="$7"
 CC_SRC_PATH="$8"
 LANGUAGE="$9"
 IS_INSTALL=${10}
-PEERCONN=${11}
+PEERCONN=$(echo $@|awk '{print substr($0, index($0, $11))}')
 ORDR_ADRS=orderer0
 DELAY="3"
 TIMEOUT="10"
@@ -150,7 +150,6 @@ approveFromOrgWithRetry () {
     set -x
     peer lifecycle chaincode queryinstalled >&pkg.txt
     PACKAGE_ID=$(sed -n "/${CC_NAME}_${CC_VERSION}/{s/^Package ID: //; s/, Label:.*$//; p;}" pkg.txt)
-    echo "package ID : ${PACKAGE_ID}"
 	peer lifecycle chaincode approveformyorg -o ${ORDR_ADRS}.example.com:7050 --ordererTLSHostnameOverride ${ORDR_ADRS}.example.com --tls true --cafile $ORDERER_CA --channelID ${CHANNEL_NAME} --name ${CC_NAME} --version ${CC_VERSION} --init-required --package-id ${PACKAGE_ID} --sequence 1
 	res=$?
     set +x
@@ -170,7 +169,7 @@ approveFromOrgWithRetry () {
 commitChaincode() {
     setGlobals $1
     set -x
-    peer lifecycle chaincode commit -o ${ORDR_ADRS}.example.com:7050 --ordererTLSHostnameOverride ${ORDR_ADRS}.example.com --tls true --cafile $ORDERER_CA --channelID ${CHANNEL_NAME} --name ${CC_NAME} $PEERCONN --version  ${CC_VERSION} --sequence 1 --init-required
+    peer lifecycle chaincode commit -o ${ORDR_ADRS}.example.com:7050 --ordererTLSHostnameOverride ${ORDR_ADRS}.example.com --tls true --cafile $ORDERER_CA --channelID ${CHANNEL_NAME} --name ${CC_NAME} ${PEERCONN} --version  ${CC_VERSION} --sequence 1 --init-required
     res=$?
     set +x
 	verifyResult $res "Commiting Chaincode Package from ${DOMAIN} has Failed"
@@ -178,10 +177,10 @@ commitChaincode() {
 	echo
 }
 invokeCommitChaincode() {
-    sleep 10
-     setGlobals $1
+    sleep 5
+    setGlobals 0
     set -x
-    peer chaincode invoke -o ${ORDR_ADRS}.example.com:7050 --ordererTLSHostnameOverride ${ORDR_ADRS}.example.com --tls true --cafile $ORDERER_CA --channelID ${CHANNEL_NAME} --name ${CC_NAME} $PEERCONN  --isInit  -c '{"function":"initLedger","Args":[]}'
+    peer chaincode invoke -o ${ORDR_ADRS}.example.com:7050 --ordererTLSHostnameOverride ${ORDR_ADRS}.example.com --tls true --cafile $ORDERER_CA --channelID ${CHANNEL_NAME} --name ${CC_NAME} ${PEERCONN} --isInit  -c '{"function":"initLedger","Args":[]}'
     res=$?
     set +x
 	verifyResult $res "Init Commited Chaincode Package from ${DOMAIN} has Failed"
@@ -215,12 +214,11 @@ chainQuery () {
     peer chaincode query -C $CHANNEL_NAME -n ${CC_NAME} -c '{"Args":["queryAllCars"]}' >&log.txt
     res=$?
     set +x
-    
     if [ $res -ne 0 -a $COUNTER -lt $INS_RETRY ]; then
 		COUNTER=` expr $COUNTER + 1`
 		echo -e "${RED}Chaincode query on channel '$CHANNEL_NAME' failed, Retry after $DELAY seconds${NC}"
 		sleep $DELAY
-		chainQuery
+		chainQuery 0
         return
     else
         COUNTER=1
@@ -239,7 +237,7 @@ echo "IS_INSTANT= ${IS_INSTANT}"
 if [ "$IS_INSTANT" == "true" ]; then
     #Instantiation 
     echo -e "${GREEN}"
-    echo "========== Commiting Chaincode on ${CHANNEL_NAME} STARTED ========="
+    echo "========== Commiting Chaincode on ${CHANNEL_NAME} channel ========="
     echo -e "${NC}"
     # sleep 5
     # instantiatedWithRetry 0
@@ -248,7 +246,7 @@ if [ "$IS_INSTANT" == "true" ]; then
     commitChaincode 0
 
     echo -e "${GREEN}"
-    echo "========== Invoking INIT Chaincode on ${CHANNEL_NAME} ========="
+    echo "========== Invoking INIT Chaincode on ${CHANNEL_NAME} channel ========="
     echo -e "${NC}"
 
     invokeCommitChaincode 0
@@ -257,7 +255,7 @@ if [ "$IS_INSTANT" == "true" ]; then
     echo -e "${GREEN}"
     echo "========== Attempting to Query peer0.${DOMAIN}.exapmle.com ...$(($(date +%s)-starttime)) secs =========="
     echo -e "${NC}"
-    chainQuery
+    chainQuery 0
 elif [ "$IS_INSTALL" == "true" ]; then
     #Installing chaincode
     #

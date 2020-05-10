@@ -179,12 +179,12 @@ function approvePackage() {
             # ssh $SSH_dORG docker exec ${INS_CNTR_ID} peer lifecycle chaincode install ${CC_NAME}.tar.gz
              ssh $SSH_dORG /bin/bash << EOF
 cd ./CLIF/${D_NME}/;
-./dockerSetup.sh "approve" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
+./dockerSetup.sh "approveCC" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
 EOF
         else
             cr=$PWD
             cd ~/CLIF/${D_NME}/;
-            ./dockerSetup.sh "approve" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
+            ./dockerSetup.sh "approveCC" $D_NME $CH_NME $P_CT $CC_NAME $CC_VER $CC_S_P $C_LANG
             cd $cr
         fi
     fi
@@ -233,7 +233,7 @@ commitChaincode() {
     CC_S_P=$6
     C_LANG=$7
     CLI_CC=$(docker ps |grep ${D_NME}_cli|awk '{print $1}')
-    docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT "true" "no policy" $CC_NAME $CC_VER $CC_S_P $C_LANG
+    docker exec $CLI_CC ./buildingNetwork.sh $CH_NME $D_NME $P_CT "true" "nopolicy" $CC_NAME $CC_VER $CC_S_P $C_LANG "false" $PEER_CONN_PARMS
     # docker exec $CLI_CC peer lifecycle chaincode install ${CC_NAME}.tar.gz
 }
 function instantiateChainIntoChannel() {

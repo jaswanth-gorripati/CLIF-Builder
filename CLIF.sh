@@ -399,10 +399,15 @@ function deployCC() {
   echo $1
   CC_LANG=$1
 
-  echo -e "${BROWN}Packaging Chaincode ${NC}"
-  packageCC ${CHANNELS[0,0]} ${T_ORGS[0]} $CC_NAME $CC_VRSN $CC_PATH $CC_LANG
+  echo -e "${GREEN}"
+  echo "========== Packaging Chaincode ========="
+  echo -e "${NC}"
   
-  echo -e "${BROWN}Installing Chaincode Package${NC}"
+  packageCC ${CHANNELS[0,0]} ${T_ORGS[0]} $CC_NAME $CC_VRSN $CC_PATH $CC_LANG
+ 
+  echo -e "${GREEN}"
+  echo "========== Installing Chaincode Package on Channel ${CHANNEL_NAME} STARTED ========="
+  echo -e "${NC}"
   installPackage ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG true
   OCNT=$( expr ${#orgDetails[@]} / 3)
   max=$(expr $OCNT - 1)
@@ -411,7 +416,13 @@ function deployCC() {
     installPackage ${CHANNELS[0,0]} ${T_ORGS[$DP_CNT]} ${orgDetails[$DP_CNT,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG false ${T_ORGS[0]} ${ORGS_SSH[${orgDetails[$DP_CNT,0]}]}
   done
 
-  echo -e "${BROWN}Approving Chaincode Package${NC}"
+  echo -e "${GREEN}"
+  echo "========== Approving Chaincode Package on Channel ${CHANNEL_NAME} STARTED ========="
+  echo -e "${NC}"
+  echo
+  echo -e "${BROWN}"
+  echo "========== Approving Chaincode Package from ${T_ORGS[0]} ========="
+  echo -e "${NC}"
   approvePackage ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG true
   parsePeerConnectionParameters ${T_ORGS[0]} $SELECTED_NETWORK_TYPE true
   echo $PEER_CONN_PARMS
@@ -420,13 +431,18 @@ function deployCC() {
   maxc=$(expr $OCNTn - 1)
   for DP_CNTn in `seq 1 $maxc`
   do
+    echo -e "${BROWN}"
+    echo "========== Approving Chaincode Package from ${T_ORGS[$DP_CNTn]} ========="
+    echo -e "${NC}"
     approvePackage ${CHANNELS[0,0]} ${T_ORGS[$DP_CNTn]} ${orgDetails[$DP_CNTn,1]} $SELECTED_NETWORK_TYPE $CC_NAME $CC_VRSN $CC_PATH $CC_LANG false ${ORGS_SSH[${orgDetails[$DP_CNTn,0]}]}
     parsePeerConnectionParameters ${T_ORGS[$DP_CNTn]} $SELECTED_NETWORK_TYPE false ${T_ORGS[0]} ${ORGS_SSH[${orgDetails[$DP_CNTn,0]}]}
     echo $PEER_CONN_PARMS
     sleep 3
   done
 
-  echo -e "${BROWN} Deploying  CHAINCODE NOW${NC}"
+  echo -e "${GREEN}"
+  echo "==========  Deploying CHAINCODE  ========="
+  echo -e "${NC}"
   commitChaincode ${CHANNELS[0,0]} ${T_ORGS[0]} ${orgDetails[0,1]} $CC_NAME $CC_VRSN $CC_PATH $CC_LANG
   echo -e "${BROWN}"
   echo -e "************ ${GREEN} NETWORK SETUP IS DONE ... THANK YOU FOR USING${BROWN} ************${NC}"
