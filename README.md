@@ -20,9 +20,11 @@ _CLIF_ is a cli ( terminal ) based fabric network builder
 
 ## Running the application
 
-- To run the application Git clone the specific repository and checkout the required fabric version branch, Example :
-- For fabric version v1.1
-- git checkout clif-v1.1
+- To run the application Git clone the specific repository and checkout the required fabric version branch,
+
+> > Example : For fabric version v1.1
+> > git checkout clif-v1.1
+
 - Go to the CLIF-Builder folder and run ./CLIF.sh
 - Enter the details as it prompts
 
