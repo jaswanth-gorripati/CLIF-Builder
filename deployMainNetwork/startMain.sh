@@ -111,6 +111,7 @@ function packageCC() {
     echo '# Packaging Chaincode'
     echo '##########################################' 
     echo "${NC}+ peer lifecycle chaincode package ${CC_NAME}.tar.gz -p /opt/gopath/src/${CC_S_P} -l ${C_LANG} --label ${CC_NAME}_${CC_VER}"
+    docker exec -ti $CLI_CC cd  /opt/gopath/src/${CC_S_P} && GO111MODULE=on go mod vendor
     docker exec -ti $CLI_CC peer lifecycle chaincode package ${CC_NAME}.tar.gz -p /opt/gopath/src/${CC_S_P} -l ${C_LANG} --label ${CC_NAME}_${CC_VER}
     if [ $? -ne 0 ]; then
         echo "ERROR !!!! failed To generate Chaincode Package"

@@ -143,6 +143,8 @@ installChaincodeWithRetry () {
 packageChaincode() {
     setGlobals $1
     set -x
+    cd /opt/gopath/src/${CC_SRC_PATH} && GO111MODULE=on go mod vendor
+    cd
     peer lifecycle chaincode package ${CC_NAME}.tar.gz -p /opt/gopath/src/${CC_SRC_PATH} -l ${LANGUAGE} --label ${CC_NAME}_${CC_VERSION}
 }
 approveFromOrgWithRetry () {

@@ -9,3 +9,5 @@ scripts
 /chaincode/chaincode_example02/realinvest
 /chaincode/chaincode_example02/go-withQueryString.zip
 /chaincode/chaincode_example02/go-hie
+/chaincode/GRID*
+/chaincode/grid*

@@ -14,6 +14,9 @@ if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   peer${P_ID}_${PORG_NAME}:
     image: hyperledger/fabric-peer:2.1.0
+    logging:
+      options:
+        max-size: 50m
     deploy:
       replicas: 1
       restart_policy:
@@ -45,11 +48,11 @@ EOF
 fi
 cat << EOF >> ${DTSPATH}
       #- FABRIC_LOGGING_SPEC=INFO
-      - FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
       - CORE_PEER_CHAINCODEADDRESS=peer${P_ID}.${PORG_NAME}.example.com:7052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
       - CORE_CHAINCODE_STARTUPTIMEOUT=1200s
-      - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+      - CORE_CHAINCODE_LOGGING_LEVEL=INFO
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false

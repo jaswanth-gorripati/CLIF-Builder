@@ -9,6 +9,9 @@ if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   ${PORG_NAME}_cli:
     image: hyperledger/fabric-tools:2.1.0
+    logging:
+      options:
+        max-size: 50m
     deploy:
       replicas: 1
       resources:

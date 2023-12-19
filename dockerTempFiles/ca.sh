@@ -10,6 +10,9 @@ if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   ca_${PORG_NAME}:
     image: hyperledger/fabric-ca:1.4.6
+    logging:
+      options:
+        max-size: 50m
     deploy:
       replicas: 1
       restart_policy:

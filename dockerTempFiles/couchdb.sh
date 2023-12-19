@@ -12,6 +12,9 @@ if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   couchdb${COUCH_ID}_${CORG}:
     image: hyperledger/fabric-couchdb:0.4.18
+    logging:
+      options:
+        max-size: 50m
     deploy:
       replicas: 1
       restart_policy:

@@ -17,6 +17,9 @@ if [ "$d_type" != "Docker-compose" ]; then
 cat << EOF >> ${DTSPATH}
   orderer${ORDR_ID}:
     image: hyperledger/fabric-orderer:2.1.0
+    logging:
+      options:
+        max-size: 50m
     deploy:
       replicas: 1
       restart_policy:
@@ -53,7 +56,7 @@ cat << EOF >> ${DTSPATH}
       - ORDERER_ABSOLUTEMAXBYTES=99 MB
       - ORDERER_PREFERREDMAXBYTES=512 MB
       - ORDERER_HOME=/var/hyperledger/orderer
-      - ORDERER_GENERAL_LOGLEVEL=debug
+      - ORDERER_GENERAL_LOGLEVEL=Info
       - ORDERER_GENERAL_LEDGERTYPE=file
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
